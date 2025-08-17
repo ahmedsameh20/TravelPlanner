@@ -85,8 +85,8 @@ public class DBHelper extends SQLiteOpenHelper {
         insertHotel(db, 2, "Desert Sands Resort", 200.0);
         insertHotel(db, 3, "Eiffel Stay", 150.0);
 
-        insertFlight(db, "Cairo", "Paris", "Economy", 350.0);
-        insertFlight(db, "Dubai", "Istanbul", "Business", 420.0);
+        insertFlight("Cairo", "Paris", "Economy", 350.0);
+        insertFlight("Dubai", "Istanbul", "Business", 420.0);
     }
 
     @Override
