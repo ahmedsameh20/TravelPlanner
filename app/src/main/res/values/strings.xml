@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">TravelPlanner</string>
+    <string name="cities">Cities</string>
+    <string name="flights">Flights</string>
+    <string name="hotels">Hotels</string>
+    <string name="favorites">Favorites</string>
+    <string name="open_cities">Open Cities</string>
+    <string name="open_flights">Open Flights</string>
+    <string name="open_hotels">Open Hotels</string>
+    <string name="open_favorites">Open Favorites</string>
+    <string name="filter">Filter</string>
 </resources>

@@ -1,0 +1,10 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/ctx_add_favorite"
+        android:title="Add to Favorites" />
+    <item
+        android:id="@+id/ctx_delete_city"
+        android:title="Delete City" />
+</menu>
