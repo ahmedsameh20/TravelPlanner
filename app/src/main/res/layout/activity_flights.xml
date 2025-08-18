@@ -1,54 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:padding="12dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+    <EditText android:id="@+id/etFrom" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="From"/>
 
-        <EditText
-            android:id="@+id/etFrom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="From city" />
+    <EditText android:id="@+id/etTo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="To" android:layout_marginTop="8dp"/>
 
-        <EditText
-            android:id="@+id/etTo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="To city"
-            android:layout_marginTop="8dp" />
+    <Spinner android:id="@+id/spinnerClass" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
 
-        <RadioGroup
-            android:id="@+id/rgClass"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp">
+    <Button android:id="@+id/btnSearchFlights" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Search" android:layout_marginTop="8dp"/>
 
-            <RadioButton
-                android:id="@+id/rbEconomy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Economy" />
-
-            <RadioButton
-                android:id="@+id/rbBusiness"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Business"
-                android:layout_marginStart="24dp" />
-        </RadioGroup>
-
-        <Button
-            android:id="@+id/btnSearchFlight"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Search"
-            android:layout_marginTop="12dp" />
-
-    </LinearLayout>
-</ScrollView>
+    <ListView android:id="@+id/flightsListView" android:layout_width="match_parent" android:layout_height="match_parent" android:divider="#DDD" android:dividerHeight="1dp" android:layout_marginTop="8dp"/>
+</LinearLayout>

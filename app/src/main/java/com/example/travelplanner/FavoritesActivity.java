@@ -2,61 +2,77 @@
 package com.example.travelplanner;
 
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class FavoritesActivity extends AppCompatActivity {
 
-    private DBHelper db;
-    private RecyclerView rv;
-    private FavoriteAdapter adapter;
+    private DBHelper dbHelper;
+    private ListView listView;
+    private ArrayList<Integer> favIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
 
-        db = new DBHelper(this);
-        rv = findViewById(R.id.rvFavorites);
-        rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new FavoriteAdapter(new FavoriteAdapter.OnFavAction() {
-            @Override
-            public void onDelete(long favId) {
-                db.deleteFavorite(favId);
-                loadFavorites();
-                Toast.makeText(FavoritesActivity.this, "Favorite removed", Toast.LENGTH_SHORT).show();
-            }
-        });
-        rv.setAdapter(adapter);
+        dbHelper = new DBHelper(this);
+        listView = findViewById(R.id.favoritesListView);
+
         loadFavorites();
+
+        listView.setOnItemLongClickListener((parent, view, position, id) -> {
+            if (position >= 0 && position < favIds.size()) {
+                int favId = favIds.get(position);
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.execSQL("DELETE FROM favorites WHERE id=?", new Object[]{favId});
+                Toast.makeText(this, "Removed favorite #" + favId, Toast.LENGTH_SHORT).show();
+                loadFavorites();
+            }
+            return true;
+        });
     }
 
     private void loadFavorites() {
-        Cursor c = db.getAllFavorites();
-        List<String> items = new ArrayList<>();
-        List<Long> ids = new ArrayList<>();
-        if (c != null) {
-            int idIdx = c.getColumnIndex(DBHelper.COL_FAV_ID);
-            int typeIdx = c.getColumnIndex(DBHelper.COL_FAV_TYPE);
-            int refIdx = c.getColumnIndex(DBHelper.COL_FAV_REF);
-            while (c.moveToNext()) {
-                long id = c.getLong(idIdx);
-                String type = c.getString(typeIdx);
-                long ref = c.getLong(refIdx);
-                String text = type + " (id=" + ref + ")";
-                items.add(text);
-                ids.add(id);
+        ArrayList<String> favs = new ArrayList<>();
+        favIds.clear();
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id, type, ref_id FROM favorites WHERE user_id=? ORDER BY id DESC", new String[]{String.valueOf(SessionManager.getUserId(this))});
+        while (c.moveToNext()) {
+            int id = c.getInt(0);
+            String type = c.getString(1);
+            int refId = c.getInt(2);
+            String name = "";
+
+            if (type.equals("city")) {
+                Cursor cc = db.rawQuery("SELECT name FROM cities WHERE id=?", new String[]{String.valueOf(refId)});
+                if (cc.moveToFirst()) name = cc.getString(0);
+                cc.close();
+            } else if (type.equals("hotel")) {
+                Cursor cc = db.rawQuery("SELECT name FROM hotels WHERE id=?", new String[]{String.valueOf(refId)});
+                if (cc.moveToFirst()) name = cc.getString(0);
+                cc.close();
+            } else if (type.equals("flight")) {
+                Cursor cc = db.rawQuery("SELECT from_city, to_city FROM flights WHERE id=?", new String[]{String.valueOf(refId)});
+                if (cc.moveToFirst()) name = cc.getString(0) + " → " + cc.getString(1);
+                cc.close();
             }
-            c.close();
+
+            favIds.add(id);
+            favs.add(type.toUpperCase() + ": " + name + "  [fav#" + id + "]");
         }
-        adapter.setData(items, ids);
+        c.close();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1, favs);
+        listView.setAdapter(adapter);
     }
 }
