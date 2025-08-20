@@ -1,0 +1,1 @@
+[{"from": "Cairo", "to": "Paris", "class": "Economy", "price": 350.0}, {"from": "Cairo", "to": "Paris", "class": "Business", "price": 700.0}, {"from": "Paris", "to": "Dubai", "class": "Economy", "price": 360.0}, {"from": "Dubai", "to": "Cairo", "class": "Economy", "price": 280.0}]

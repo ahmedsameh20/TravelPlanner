@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:gravity="center" android:padding="20dp"
-    android:layout_width="match_parent" android:layout_height="match_parent">
-
-    <TextView android:id="@+id/tvWelcome" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Welcome" android:textSize="20sp" android:layout_marginBottom="20dp"/>
-
-    <Button android:id="@+id/btnCities" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/choose_city" android:layout_marginTop="8dp"/>
-
-    <Button android:id="@+id/btnFlights" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/book_flight" android:layout_marginTop="8dp"/>
-
-    <Button android:id="@+id/btnHotels" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/book_hotel" android:layout_marginTop="8dp"/>
-
-    <Button android:id="@+id/btnFavorites" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/favorites" android:layout_marginTop="8dp"/>
-
-    <Button android:id="@+id/btnBookings" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/my_bookings" android:layout_marginTop="8dp"/>
-
-    <Button android:id="@+id/btnLogout" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Logout" android:layout_marginTop="16dp"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
+    <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+    <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_navigation" android:layout_width="match_parent" android:layout_height="wrap_content" app:itemIconTint="@color/nav_item_color" app:itemTextColor="@color/nav_item_color" app:menu="@menu/bottom_nav_menu"/>
 </LinearLayout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/nav_cities" android:icon="@drawable/ic_city" android:title="@string/cities"/>
+    <item android:id="@+id/nav_hotels" android:icon="@drawable/ic_hotel" android:title="@string/hotels"/>
+    <item android:id="@+id/nav_flights" android:icon="@drawable/ic_flight" android:title="@string/flights"/>
+    <item android:id="@+id/nav_favorites" android:icon="@drawable/ic_favorite" android:title="@string/favorites"/>
+    <item android:id="@+id/nav_bookings" android:icon="@drawable/ic_booking" android:title="@string/bookings"/>
+</menu>

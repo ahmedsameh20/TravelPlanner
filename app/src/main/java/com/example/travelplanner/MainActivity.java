@@ -1,45 +1,10 @@
 
 package com.example.travelplanner;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.os.Bundle; import androidx.appcompat.app.AppCompatActivity; import androidx.fragment.app.Fragment; import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class MainActivity extends AppCompatActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        if (SessionManager.getUserId(this) == -1) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return;
-        }
-
+    @Override protected void onCreate(Bundle s){
+        super.onCreate(s);
         setContentView(R.layout.activity_main);
-
-        TextView tvWelcome = findViewById(R.id.tvWelcome);
-        Button btnCities = findViewById(R.id.btnCities);
-        Button btnFlights = findViewById(R.id.btnFlights);
-        Button btnHotels = findViewById(R.id.btnHotels);
-        Button btnFavorites = findViewById(R.id.btnFavorites);
-        Button btnBookings = findViewById(R.id.btnBookings);
-        Button btnLogout = findViewById(R.id.btnLogout);
-
-        tvWelcome.setText("Welcome, " + SessionManager.getUserName(this));
-
-        btnCities.setOnClickListener(v -> startActivity(new Intent(this, CitiesActivity.class)));
-        btnFlights.setOnClickListener(v -> startActivity(new Intent(this, FlightsActivity.class)));
-        btnHotels.setOnClickListener(v -> startActivity(new Intent(this, HotelsActivity.class)));
-        btnFavorites.setOnClickListener(v -> startActivity(new Intent(this, FavoritesActivity.class)));
-        btnBookings.setOnClickListener(v -> startActivity(new Intent(this, BookingsActivity.class)));
-        btnLogout.setOnClickListener(v -> {
-            SessionManager.logout(this);
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-        });
-    }
+        BottomNavigationView nav=findViewById(R.id.bottom_navigation);
+        nav.setOnItemSelectedListener(item->{ Fragment f=null;int id=item.getItemId();if(id==R.id.nav_cities) f=new CitiesFragment();else if(id==R.id.nav_hotels) f=new HotelsFragment();else if(id==R.id.nav_flights) f=new FlightsFragment();else if(id==R.id.nav_favorites) f=new FavoritesFragment();else if(id==R.id.nav_bookings) f=new BookingsFragment();if(f!=null) getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,f).commit();return true; }); if(s==null) getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,new CitiesFragment()).commit(); }
 }
