@@ -1,5 +1,6 @@
 package com.example.travelplanner;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -87,6 +88,7 @@ public class SimpleAdapter<T> extends RecyclerView.Adapter<SimpleAdapter.VH> imp
                 return results;
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 //noinspection unchecked

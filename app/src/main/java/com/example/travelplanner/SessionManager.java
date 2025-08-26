@@ -3,7 +3,8 @@ package com.example.travelplanner;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class SessionManager {
+public class SessionManager
+{
     private static final String PREF_NAME = "travel_session";
     public static void saveUser(Context ctx, int id, String name) {
         SharedPreferences sp = ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical">
+
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/tvFlightTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="From → To"
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tvFlightSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/class_price"
+            android:textSize="14sp"
+            android:textColor="#555"
+            android:ellipsize="end"
+            android:singleLine="true"/>
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/ivFavorite"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_heart_outline"
+        android:contentDescription="@string/favorite"
+        android:visibility="visible"/>
+</LinearLayout>

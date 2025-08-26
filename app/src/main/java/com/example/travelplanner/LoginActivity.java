@@ -1,1 +1,22 @@
-package com.example.travelplanner; import android.content.Intent; import android.os.Bundle; import android.widget.Button; import android.widget.EditText; import androidx.appcompat.app.AppCompatActivity; public class LoginActivity extends AppCompatActivity { @Override protected void onCreate(Bundle s){ super.onCreate(s); setContentView(R.layout.activity_login); EditText etE=findViewById(R.id.etEmail); EditText etP=findViewById(R.id.etPassword); Button btn=findViewById(R.id.btnLogin); Button reg=findViewById(R.id.btnRegister); btn.setOnClickListener(v -> { Prefs.setEmail(this, etE.getText().toString()); Prefs.setLogged(this, true); startActivity(new Intent(this, MainActivity.class)); finish(); }); reg.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class))); } }
+package com.example.travelplanner;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import androidx.appcompat.app.AppCompatActivity;
+public class LoginActivity extends AppCompatActivity
+{
+    @Override
+protected void onCreate(Bundle s)
+    { super.onCreate(s);
+        setContentView(R.layout.activity_login);
+        EditText etE=findViewById(R.id.etEmail);
+        EditText etP=findViewById(R.id.etPassword);
+        Button btn=findViewById(R.id.btnLogin);
+        Button reg=findViewById(R.id.btnRegister);
+        btn.setOnClickListener(v -> { Prefs.setEmail(this, etE.getText().toString());
+            Prefs.setLogged(this, true);
+            startActivity(new Intent(this, MainActivity.class));
+            finish(); }); reg.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
+    }
+}

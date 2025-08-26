@@ -1,1 +1,13 @@
-package com.example.travelplanner; import android.content.Intent; import android.os.Bundle; import android.widget.Button; import androidx.appcompat.app.AppCompatActivity; public class WelcomeActivity extends AppCompatActivity { @Override protected void onCreate(Bundle s){ super.onCreate(s); setContentView(R.layout.activity_welcome); Button btn=findViewById(R.id.btn_continue); btn.setOnClickListener(v -> { startActivity(new Intent(this, LoginActivity.class)); finish(); }); } }
+package com.example.travelplanner;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+public class WelcomeActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle s){ super.onCreate(s);
+        setContentView(R.layout.activity_welcome);
+        Button btn=findViewById(R.id.btn_continue);
+        btn.setOnClickListener(v -> { startActivity(new Intent(this, LoginActivity.class)); finish(); });
+    }
+}

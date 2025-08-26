@@ -3,21 +3,76 @@ package com.example.travelplanner;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
-    public interface Listener { void onClick(Hotel h); void onLong(Hotel h); }
-    private List<Hotel> data; private Listener listener;
-    public HotelAdapter(List<Hotel> data, Listener listener){ this.data=data; this.listener=listener; }
-    public static class VH extends RecyclerView.ViewHolder {
-        TextView tvTitle,tvSubtitle;
-        public VH(View v){ super(v); tvTitle=v.findViewById(R.id.tvTitle); tvSubtitle=v.findViewById(R.id.tvSubtitle); }
+
+    public interface Listener {
+        void onClick(Hotel h);
+        void onToggleFavorite(Hotel h);
     }
-    @Override public VH onCreateViewHolder(ViewGroup p,int v){ return new VH(LayoutInflater.from(p.getContext()).inflate(R.layout.item_simple,p,false)); }
-    @Override public void onBindViewHolder(VH h,int pos){ Hotel it = data.get(pos); h.tvTitle.setText(it.name); h.tvSubtitle.setText("$" + it.price); h.itemView.setOnClickListener(v->listener.onClick(it)); h.itemView.setOnLongClickListener(v->{ listener.onLong(it); return true; }); }
-    @Override public int getItemCount(){ return data.size(); }
+
+    private List<Hotel> hotels;
+    private Listener listener;
+
+    public HotelAdapter(List<Hotel> hotels, Listener listener) {
+        this.hotels = hotels;
+        this.listener = listener;
+    }
+
+    public static class VH extends RecyclerView.ViewHolder {
+        TextView tvHotelName, tvHotelDetails;
+        ImageButton btnFav;
+
+        public VH(@NonNull View itemView) {
+            super(itemView);
+            tvHotelName = itemView.findViewById(R.id.tvHotelName);
+            tvHotelDetails = itemView.findViewById(R.id.tvHotelDetails);
+            btnFav = itemView.findViewById(R.id.btnFav);
+        }
+    }
+
+    @NonNull
+    @Override
+    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_hotel, parent, false);
+        return new VH(v);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull VH holder, int position) {
+        Hotel h = hotels.get(position);
+
+        holder.tvHotelName.setText(h.name);
+        holder.tvHotelDetails.setText("Price: $" + h.price);
+
+
+        holder.btnFav.setImageResource(
+                h.isFavorite() ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline
+        );
+
+
+        holder.btnFav.setOnClickListener(v -> {
+            h.setFavorite(!h.isFavorite());
+            notifyItemChanged(position);
+            if (listener != null) listener.onToggleFavorite(h);
+        });
+
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onClick(h);
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return hotels.size();
+    }
 }

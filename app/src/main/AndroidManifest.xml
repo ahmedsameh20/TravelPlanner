@@ -14,31 +14,25 @@
             android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
+                <action android:name="android.intent.action.MAIN" />
 
-        <!-- Welcome Activity -->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> <!-- Welcome Activity -->
         <activity
             android:name=".WelcomeActivity"
-            android:exported="false" />
-
-        <!-- Login Activity -->
+            android:exported="false" /> <!-- Login Activity -->
         <activity
             android:name=".LoginActivity"
-            android:exported="false" />
-
-        <!-- Register Activity -->
+            android:exported="false" /> <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
-            android:exported="false" />
-
-        <!-- Main Activity -->
+            android:exported="false" /> <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".FavoritesActivity" android:exported="false" />
     </application>
 
 </manifest>

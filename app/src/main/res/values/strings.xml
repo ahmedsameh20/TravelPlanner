@@ -12,4 +12,9 @@
     <string name="favorites">Favorites</string>
     <string name="bookings">Bookings</string>
     <string name="action_about">About</string>
+    <string name="current_booking">Current Booking</string>
+    <string name="past_booking">Past Booking</string>
+    <string name="past_bookings">Past Bookings</string>
+    <string name="favorite">Favorite</string>
+    <string name="class_price">Class - $Price</string>
 </resources>

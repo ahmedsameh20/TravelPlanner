@@ -1,15 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:padding="12dp">
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <EditText android:id="@+id/etFrom" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="From"/>
+    <EditText
+        android:id="@+id/etFrom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="From" />
 
-    <EditText android:id="@+id/etTo" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="To" android:layout_marginTop="8dp"/>
+    <EditText
+        android:id="@+id/etTo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="To"
+        android:layout_marginTop="8dp" />
 
-    <Spinner android:id="@+id/spinnerClass" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp"/>
+    <Spinner
+        android:id="@+id/spinnerClass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"/>
 
-    <Button android:id="@+id/btnSearchFlights" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Search" android:layout_marginTop="8dp"/>
+    <Button
+        android:id="@+id/btnSearchFlights"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Search" />
 
-    <ListView android:id="@+id/flightsListView" android:layout_width="match_parent" android:layout_height="match_parent" android:divider="#DDD" android:dividerHeight="1dp" android:layout_marginTop="8dp"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFlights"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"/>
 </LinearLayout>
