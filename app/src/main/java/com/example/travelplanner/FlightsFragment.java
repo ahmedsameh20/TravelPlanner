@@ -1,5 +1,6 @@
 package com.example.travelplanner;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,44 +9,43 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Calendar;
 import java.util.List;
 
 public class FlightsFragment extends Fragment {
 
-    private FlightAdapter ad;
+    private FlightAdapter adapter;
     private List<Flight> data;
+    private DBHelper dbHelper;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_flights, container, false);
 
+        dbHelper = new DBHelper(requireContext());
+
         RecyclerView rv = v.findViewById(R.id.rvFlights);
         if (rv != null) rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
+        // جلب جميع الرحلات من DBHelper
+        data = dbHelper.getAllFlights();
 
-        data = DataProvider.getFlights(requireContext());
-
-
-        ad = new FlightAdapter(requireContext(), data, flight -> {
-
-            Prefs.toggleFav(requireContext(), "Flight: " + flight.id);
-        });
-
-        if (rv != null) rv.setAdapter(ad);
-
+        // إنشاء Adapter مع DBHelper لتمكين الحجز
+        adapter = new FlightAdapter(requireContext(), dbHelper, data);
+        if (rv != null) rv.setAdapter(adapter);
 
         EditText etFrom = v.findViewById(R.id.etFrom);
         EditText etTo = v.findViewById(R.id.etTo);
         Spinner spClass = v.findViewById(R.id.spinnerClass);
-        Button btn = v.findViewById(R.id.btnSearchFlights);
-
+        Button btnSearch = v.findViewById(R.id.btnSearchFlights);
 
         if (spClass != null) {
             ArrayAdapter<String> classAdapter = new ArrayAdapter<>(requireContext(),
@@ -54,15 +54,16 @@ public class FlightsFragment extends Fragment {
             spClass.setAdapter(classAdapter);
         }
 
-
-        if (btn != null) {
-            btn.setOnClickListener(click -> {
+        if (btnSearch != null) {
+            btnSearch.setOnClickListener(click -> {
                 String from = etFrom != null ? etFrom.getText().toString().trim() : "";
                 String to = etTo != null ? etTo.getText().toString().trim() : "";
                 String cls = spClass != null && spClass.getSelectedItem() != null ? spClass.getSelectedItem().toString() : "";
 
                 String filter = (from + " " + to + " " + cls).trim();
-                ad.getFilter().filter(filter);
+                if (adapter instanceof android.widget.Filterable) {
+                    ((android.widget.Filterable) adapter).getFilter().filter(filter);
+                }
             });
         }
 

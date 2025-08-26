@@ -1,4 +1,4 @@
-/*package com.example.travelplanner;
+package com.example.travelplanner;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -33,4 +33,4 @@ public class ConfirmedBookings extends ViewModel {
 
         confirmedBookings.setValue(currentList);
     }
-}*/
+}

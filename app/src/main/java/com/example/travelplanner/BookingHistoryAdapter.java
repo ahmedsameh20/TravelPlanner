@@ -1,4 +1,4 @@
-/*package com.example.travelplanner;
+package com.example.travelplanner;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -83,4 +83,4 @@ public class BookingHistoryAdapter extends RecyclerView.Adapter<BookingHistoryAd
             cancelCheckBox = itemView.findViewById(R.id.cb_cancel);
         }
     }
-}*/
+}

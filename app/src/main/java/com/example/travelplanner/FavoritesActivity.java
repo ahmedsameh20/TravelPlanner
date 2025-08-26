@@ -16,7 +16,7 @@ public class FavoritesActivity extends AppCompatActivity {
 
     private DBHelper dbHelper;
     private ListView listView;
-    private ArrayList<Integer> favIds = new ArrayList<>();
+    private final ArrayList<Integer> favIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

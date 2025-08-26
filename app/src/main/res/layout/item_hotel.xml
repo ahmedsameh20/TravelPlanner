@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
@@ -26,11 +25,19 @@
             android:text="City &amp; Price" />
     </LinearLayout>
 
+    <Button
+        android:id="@+id/btnConfirmBooking"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Book" />
+
     <ImageButton
         android:id="@+id/btnFav"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_heart_outline"
-        android:contentDescription="Favorite" />
+        android:contentDescription="Favorite"
+        android:src="@drawable/ic_heart_outline" />
+
 </LinearLayout>

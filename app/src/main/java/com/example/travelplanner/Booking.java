@@ -1,4 +1,4 @@
-/*package com.example.travelplanner;
+package com.example.travelplanner;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -66,4 +66,3 @@ public class Booking implements Parcelable {
         return "Booking: " + details + " (" + bookingDate + ")";
     }
 }
-*/

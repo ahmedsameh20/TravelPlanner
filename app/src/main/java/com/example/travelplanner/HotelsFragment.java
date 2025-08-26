@@ -15,6 +15,8 @@ import java.util.List;
 
 public class HotelsFragment extends Fragment {
 
+    private DBHelper dbHelper;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -23,26 +25,15 @@ public class HotelsFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_hotels, container, false);
 
+        dbHelper = new DBHelper(requireContext());
+
         RecyclerView recyclerHotels = v.findViewById(R.id.recyclerHotels);
         recyclerHotels.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        DBHelper dbHelper = new DBHelper(requireContext());
         List<Hotel> hotels = dbHelper.getAllHotels();
 
-        HotelAdapter adapter = new HotelAdapter(hotels, new HotelAdapter.Listener() {
-            @Override
-            public void onClick(Hotel h) {
-
-            }
-
-            @Override
-            public void onToggleFavorite(Hotel h) {
-
-                if (h.isFavorite()) {
-                    Prefs.toggleFav(requireContext(), "Hotel: " + h.id);
-                }
-            }
-        });
+        // استخدم النسخة الجديدة من HotelAdapter
+        HotelAdapter adapter = new HotelAdapter(requireContext(), dbHelper, hotels);
 
         recyclerHotels.setAdapter(adapter);
 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.content.ContentValues;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "travelplanner.db";
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 14;
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -22,16 +23,19 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         try {
+            // cities
             db.execSQL("CREATE TABLE IF NOT EXISTS cities(" +
                     "id INTEGER PRIMARY KEY, " +
                     "name TEXT);");
 
+            // hotels
             db.execSQL("CREATE TABLE IF NOT EXISTS hotels(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "city_id INTEGER, " +
                     "name TEXT, " +
                     "price REAL);");
 
+            //flights
             db.execSQL("CREATE TABLE IF NOT EXISTS flights(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "from_city TEXT, " +
@@ -39,6 +43,13 @@ public class DBHelper extends SQLiteOpenHelper {
                     "cls TEXT, " +
                     "price REAL);");
 
+            //booking
+            db.execSQL("CREATE TABLE IF NOT EXISTS bookings(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "user_id INTEGER, " +
+                    "type TEXT, " +
+                    "ref_id INTEGER, " +
+                    "date TEXT);");
 
             // Cities
             db.execSQL("INSERT INTO cities (id, name) VALUES " +
@@ -80,6 +91,14 @@ public class DBHelper extends SQLiteOpenHelper {
                     "('Dubai','Riyadh','Economy',180)," +
                     "('Rome','Cairo','Economy',330);");
 
+            //favorites
+            db.execSQL("CREATE TABLE IF NOT EXISTS favorites(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "user_id INTEGER, " +
+                    "type TEXT, " +
+                    "ref_id INTEGER);");
+
+
         } catch (Exception e) {
             Log.e(TAG, "onCreate error", e);
         }
@@ -91,13 +110,10 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS flights");
         db.execSQL("DROP TABLE IF EXISTS hotels");
         db.execSQL("DROP TABLE IF EXISTS cities");
-        onCreate(db);
-    }
+        db.execSQL("DROP TABLE IF EXISTS bookings");
+        db.execSQL("DROP TABLE IF EXISTS favorites");
 
-    @Override
-    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.w(TAG, "Downgrading DB from " + oldVersion + " to " + newVersion + ". Recreating schema.");
-        onUpgrade(db, oldVersion, newVersion);
+        onCreate(db);
     }
 
     // ---------------- Getters ----------------
@@ -145,6 +161,73 @@ public class DBHelper extends SQLiteOpenHelper {
                 String cls = c.getString(c.getColumnIndexOrThrow("cls"));
                 double price = c.getDouble(c.getColumnIndexOrThrow("price"));
                 list.add(new Flight(id, from, to, cls, price));
+            } while (c.moveToNext());
+        }
+        c.close();
+        return list;
+    }
+
+    // ---------------- Bookings ----------------
+    public void confirmBooking(int userId, String type, int refId, String date) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("user_id", userId);
+        values.put("type", type);      // "hotel" or "flight"
+        values.put("ref_id", refId);   // hotel or flight ID
+        values.put("date", date);      // e.g., "2025-08-26"
+        db.insert("bookings", null, values);
+    }
+
+    public void addToFavorites(int userId, String type, int refId){
+        ContentValues cv = new ContentValues();
+        cv.put("user_id", userId);
+        cv.put("type", type);
+        cv.put("ref_id", refId);
+        getWritableDatabase().insert("favorites", null, cv);
+    }
+
+
+    public void removeFromFavorites(int userId, String type, int refId){
+        getWritableDatabase().delete("favorites",
+                "user_id=? AND type=? AND ref_id=?",
+                new String[]{String.valueOf(userId), type, String.valueOf(refId)});
+    }
+
+    public boolean isFavorite(int userId, int refId, String type){
+        Cursor c = getReadableDatabase().rawQuery(
+                "SELECT id FROM favorites WHERE user_id=? AND type=? AND ref_id=?",
+                new String[]{String.valueOf(userId), type, String.valueOf(refId)});
+        boolean exists = c.moveToFirst();
+        c.close();
+        return exists;
+    }
+
+    public List<String> getAllBookings(int userId) {
+        List<String> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT b.type, b.ref_id, b.date, f.from_city, f.to_city, h.name, h.price " +
+                        "FROM bookings b " +
+                        "LEFT JOIN flights f ON b.type='flight' AND b.ref_id=f.id " +
+                        "LEFT JOIN hotels h ON b.type='hotel' AND b.ref_id=h.id " +
+                        "WHERE b.user_id=? ORDER BY b.id DESC",
+                new String[]{String.valueOf(userId)}
+        );
+        if (c.moveToFirst()) {
+            do {
+                String type = c.getString(c.getColumnIndexOrThrow("type"));
+                String date = c.getString(c.getColumnIndexOrThrow("date"));
+                String info = "";
+                if (type.equals("flight")) {
+                    String from = c.getString(c.getColumnIndexOrThrow("from_city"));
+                    String to = c.getString(c.getColumnIndexOrThrow("to_city"));
+                    info = type.toUpperCase() + ": " + from + " → " + to + " at " + date;
+                } else if (type.equals("hotel")) {
+                    String name = c.getString(c.getColumnIndexOrThrow("name"));
+                    double price = c.getDouble(c.getColumnIndexOrThrow("price"));
+                    info = type.toUpperCase() + ": " + name + " ($" + price + ") at " + date;
+                }
+                list.add(info);
             } while (c.moveToNext());
         }
         c.close();

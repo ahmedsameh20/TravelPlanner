@@ -1,4 +1,4 @@
-/*package com.example.travelplanner;
+package com.example.travelplanner;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -79,4 +79,4 @@ public class HistoryFragment extends Fragment {
         transaction.replace(R.id.fragment_container, fragmentToShow);
         transaction.commit();
     }
-}*/
+}

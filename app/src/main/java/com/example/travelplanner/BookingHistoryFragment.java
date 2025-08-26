@@ -1,4 +1,4 @@
-/*package com.example.travelplanner;
+package com.example.travelplanner;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -53,5 +53,5 @@ public class BookingHistoryFragment extends Fragment {
 
         return view;
     }
-}*/
+}
 
