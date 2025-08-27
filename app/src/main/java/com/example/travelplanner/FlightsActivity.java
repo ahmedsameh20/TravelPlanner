@@ -9,14 +9,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class FlightsActivity extends AppCompatActivity {
 
     private EditText etFrom, etTo;
     private Spinner spinnerClass;
     private RecyclerView rvFlights;
-    private ArrayList<Flight> flightList = new ArrayList<>();
+    private List<Flight> flightList;
     private FlightAdapter adapter;
     private DBHelper dbHelper;
 
@@ -32,15 +32,15 @@ public class FlightsActivity extends AppCompatActivity {
         spinnerClass = findViewById(R.id.spinnerClass);
         rvFlights = findViewById(R.id.rvFlights);
 
-        spinnerClass.setAdapter(new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, new String[]{"Economy", "Business"}));
+        ArrayAdapter<String> classAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, new String[]{"", "Economy", "Business"});
+        classAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerClass.setAdapter(classAdapter);
 
-        flightList.add(new Flight(1, "Cairo", "Paris", "Economy", 500));
-        flightList.add(new Flight(2, "Cairo", "London", "Business", 1200));
-        flightList.add(new Flight(3, "New York", "Tokyo", "Economy", 800));
+        flightList = dbHelper.getAllFlights();
 
         adapter = new FlightAdapter(this, dbHelper, flightList);
-        rvFlights.setAdapter(adapter);
         rvFlights.setLayoutManager(new LinearLayoutManager(this));
+        rvFlights.setAdapter(adapter);
     }
 }
