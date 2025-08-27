@@ -35,7 +35,6 @@ public class FlightsActivity extends AppCompatActivity {
         spinnerClass.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, new String[]{"Economy", "Business"}));
 
-        // إضافة بعض الرحلات كمثال
         flightList.add(new Flight(1, "Cairo", "Paris", "Economy", 500));
         flightList.add(new Flight(2, "Cairo", "London", "Business", 1200));
         flightList.add(new Flight(3, "New York", "Tokyo", "Economy", 800));

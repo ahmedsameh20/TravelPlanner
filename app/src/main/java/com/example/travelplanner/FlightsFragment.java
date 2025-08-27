@@ -1,6 +1,5 @@
 package com.example.travelplanner;
 
-import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,14 +8,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.Calendar;
 import java.util.List;
 
 public class FlightsFragment extends Fragment {
@@ -35,10 +32,8 @@ public class FlightsFragment extends Fragment {
         RecyclerView rv = v.findViewById(R.id.rvFlights);
         if (rv != null) rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // جلب جميع الرحلات من DBHelper
         data = dbHelper.getAllFlights();
 
-        // إنشاء Adapter مع DBHelper لتمكين الحجز
         adapter = new FlightAdapter(requireContext(), dbHelper, data);
         if (rv != null) rv.setAdapter(adapter);
 
@@ -56,14 +51,12 @@ public class FlightsFragment extends Fragment {
 
         if (btnSearch != null) {
             btnSearch.setOnClickListener(click -> {
-                String from = etFrom != null ? etFrom.getText().toString().trim() : "";
-                String to = etTo != null ? etTo.getText().toString().trim() : "";
-                String cls = spClass != null && spClass.getSelectedItem() != null ? spClass.getSelectedItem().toString() : "";
+                String from = etFrom != null ? etFrom.getText().toString().trim().toLowerCase() : "";
+                String to = etTo != null ? etTo.getText().toString().trim().toLowerCase() : "";
+                String cls = spClass != null && spClass.getSelectedItem() != null ?
+                        spClass.getSelectedItem().toString().trim().toLowerCase() : "";
 
-                String filter = (from + " " + to + " " + cls).trim();
-                if (adapter instanceof android.widget.Filterable) {
-                    ((android.widget.Filterable) adapter).getFilter().filter(filter);
-                }
+                adapter.filterFlights(from, to, cls); // ← استخدام الدالة الجديدة للبحث الدقيق
             });
         }
 

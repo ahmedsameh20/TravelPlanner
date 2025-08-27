@@ -22,6 +22,7 @@ import java.util.List;
 public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
 
     private List<Flight> data;
+    private List<Flight> dataFull; // نسخة كاملة لجميع الرحلات
     private Context context;
     private DBHelper dbHelper;
 
@@ -29,6 +30,7 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         this.context = context;
         this.dbHelper = dbHelper;
         this.data = (data != null) ? data : new ArrayList<>();
+        this.dataFull = new ArrayList<>(this.data);
     }
 
     @NonNull
@@ -46,11 +48,9 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         holder.title.setText(f.from + " → " + f.to);
         holder.subtitle.setText(f.cls + " - $" + f.price);
 
-        // تحديث أيقونة القلب بناءً على جدول favorites
         boolean fav = dbHelper.isFavorite(userId, f.id, "flight");
         holder.ivFavorite.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
-        // الضغط على القلب يضيف أو يحذف من المفضلات
         holder.ivFavorite.setOnClickListener(v -> {
             if (dbHelper.isFavorite(userId, f.id, "flight")) {
                 dbHelper.removeFromFavorites(userId, "flight", f.id);
@@ -63,7 +63,6 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
             }
         });
 
-        // زر الحجز
         holder.btnConfirm.setOnClickListener(v -> pickDateAndBook(f));
     }
 
@@ -92,6 +91,20 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
     @Override
     public int getItemCount() {
         return data.size();
+    }
+
+    // --- دالة فلترة دقيقة لكل حقل ---
+    public void filterFlights(String from, String to, String cls) {
+        List<Flight> filteredList = new ArrayList<>();
+        for (Flight flight : dataFull) {
+            boolean match = (from.isEmpty() || flight.from.toLowerCase().contains(from)) &&
+                    (to.isEmpty() || flight.to.toLowerCase().contains(to)) &&
+                    (cls.isEmpty() || flight.cls.toLowerCase().equals(cls));
+            if (match) filteredList.add(flight);
+        }
+        data.clear();
+        data.addAll(filteredList);
+        notifyDataSetChanged();
     }
 
     static class VH extends RecyclerView.ViewHolder {
