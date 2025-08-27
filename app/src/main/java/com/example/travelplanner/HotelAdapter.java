@@ -46,11 +46,10 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
         holder.tvHotelName.setText(h.name);
         holder.tvHotelDetails.setText("Price: $" + h.price);
 
-        // تحديث أيقونة القلب حسب قاعدة البيانات
         boolean fav = dbHelper.isFavorite(userId, h.id, "hotel");
         holder.btnFav.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
-        // الضغط على القلب يضيف أو يحذف من المفضلات
+
         holder.btnFav.setOnClickListener(v -> {
             if (dbHelper.isFavorite(userId, h.id, "hotel")) {
                 dbHelper.removeFromFavorites(userId, "hotel", h.id);
@@ -63,7 +62,7 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
             }
         });
 
-        // زر الحجز
+
         holder.btnConfirm.setOnClickListener(v -> pickDateAndBook(h));
     }
 
@@ -92,6 +91,11 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
     @Override
     public int getItemCount() {
         return hotels.size();
+    }
+
+    public void updateData(List<Hotel> newHotels) {
+        this.hotels = newHotels;
+        notifyDataSetChanged();
     }
 
     static class VH extends RecyclerView.ViewHolder {
