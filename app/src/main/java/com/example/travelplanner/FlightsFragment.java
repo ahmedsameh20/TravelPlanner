@@ -56,7 +56,7 @@ public class FlightsFragment extends Fragment {
                 String cls = spClass != null && spClass.getSelectedItem() != null ?
                         spClass.getSelectedItem().toString().trim().toLowerCase() : "";
 
-                adapter.filterFlights(from, to, cls); // ← استخدام الدالة الجديدة للبحث الدقيق
+                adapter.filterFlights(from, to, cls);
             });
         }
 

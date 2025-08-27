@@ -22,7 +22,7 @@ import java.util.List;
 public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
 
     private List<Flight> data;
-    private List<Flight> dataFull; // نسخة كاملة لجميع الرحلات
+    private List<Flight> dataFull;
     private Context context;
     private DBHelper dbHelper;
 
@@ -93,7 +93,7 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         return data.size();
     }
 
-    // --- دالة فلترة دقيقة لكل حقل ---
+
     public void filterFlights(String from, String to, String cls) {
         List<Flight> filteredList = new ArrayList<>();
         for (Flight flight : dataFull) {

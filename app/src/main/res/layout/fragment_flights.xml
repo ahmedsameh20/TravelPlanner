@@ -31,7 +31,7 @@
         android:layout_marginTop="8dp"
         android:text="Search" />
 
-    <!-- RecyclerView لعرض الرحلات مع أيقونة القلب -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFlights"
         android:layout_width="match_parent"
