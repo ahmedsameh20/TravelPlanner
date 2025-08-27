@@ -1,6 +1,7 @@
 
 package com.example.travelplanner;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ public class FavoritesActivity extends AppCompatActivity {
     private ListView listView;
     private final ArrayList<Integer> favIds = new ArrayList<>();
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

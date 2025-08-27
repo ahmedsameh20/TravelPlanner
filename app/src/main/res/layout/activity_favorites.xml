@@ -9,13 +9,15 @@
         android:id="@+id/tvFav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Favorites"
+        android:text="Favorites (long press to remove)"
         android:textSize="18sp"
         android:textStyle="bold"
         android:paddingBottom="8dp" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerFavorites"
+    <ListView
+        android:id="@+id/favoritesListView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:divider="@android:color/darker_gray"
+        android:dividerHeight="1dp"/>
 </LinearLayout>
