@@ -1,0 +1,1 @@
+The objective of the Travel Planner project is to provide users with a comprehensive and user-friendly mobile application that simplifies the process of planning, booking, and managing their travel itineraries. It aims to integrate flight and hotel booking functionalities, favorite management, and booking history tracking into a single Android application.
