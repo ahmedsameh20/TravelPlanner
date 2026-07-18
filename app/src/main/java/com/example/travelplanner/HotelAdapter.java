@@ -1,9 +1,8 @@
 package com.example.travelplanner;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
 
@@ -71,20 +72,25 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
         int y = cal.get(Calendar.YEAR), m = cal.get(Calendar.MONTH), d = cal.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog dp = new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
-            String date = dayOfMonth + "/" + (month + 1) + "/" + year;
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            Calendar picked = Calendar.getInstance();
+            picked.set(year, month, dayOfMonth, 0, 0, 0);
+            long dateMs = picked.getTimeInMillis();
+            String dateStr = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(picked.getTime());
+            String details = hotel.name + " — $" + hotel.price;
 
-            ContentValues values = new ContentValues();
-            values.put("user_id", SessionManager.getUserId(context));
-            values.put("type", "hotel");
-            values.put("ref_id", hotel.id);
-            values.put("date", date);
-
-            long id = db.insert("bookings", null, values);
-            if (id > 0) {
-                Toast.makeText(context, "Hotel booked on " + date + "\n" + hotel.name, Toast.LENGTH_SHORT).show();
-            }
+            new AlertDialog.Builder(context)
+                    .setTitle("Confirm booking")
+                    .setMessage("Book " + hotel.name + " for " + dateStr + " at $" + hotel.price + "?")
+                    .setPositiveButton("Book", (dialog, which) -> {
+                        long id = dbHelper.insertBooking(SessionManager.getUserId(context), "hotel", hotel.id, details, dateMs);
+                        if (id > 0) {
+                            Toast.makeText(context, "Hotel booked for " + dateStr + "\n" + hotel.name, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }, y, m, d);
+        dp.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
         dp.show();
     }
 

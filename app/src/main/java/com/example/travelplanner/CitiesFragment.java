@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -22,13 +23,27 @@ public class CitiesFragment extends Fragment {
         RecyclerView rv = v.findViewById(R.id.rvList);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        List<City> data = DataProvider.getCities();
+        DBHelper dbHelper = new DBHelper(requireContext());
+        int userId = SessionManager.getUserId(requireContext());
+        List<City> data = dbHelper.getAllCities();
+
         SimpleAdapter<City> ad = new SimpleAdapter<>(data, new SimpleAdapter.Binder<City>() {
             @Override
             public void bind(SimpleAdapter.VH h, City item) {
                 h.tv1.setText(item.name);
-                h.tv2.setText("ID: " + item.id);
-                h.itemView.setOnClickListener(x -> Prefs.toggleFav(requireContext(), "City: " + item.name));
+                boolean fav = dbHelper.isFavorite(userId, item.id, "city");
+                h.tv2.setText(fav ? "★ Favorite" : "City ID: " + item.id);
+                h.itemView.setOnClickListener(x -> {
+                    if (dbHelper.isFavorite(userId, item.id, "city")) {
+                        dbHelper.removeFromFavorites(userId, "city", item.id);
+                        h.tv2.setText("City ID: " + item.id);
+                        Toast.makeText(requireContext(), "Removed " + item.name + " from favorites", Toast.LENGTH_SHORT).show();
+                    } else {
+                        dbHelper.addToFavorites(userId, "city", item.id);
+                        h.tv2.setText("★ Favorite");
+                        Toast.makeText(requireContext(), "Added " + item.name + " to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override

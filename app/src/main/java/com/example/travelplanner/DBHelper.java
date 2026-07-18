@@ -14,7 +14,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "DBHelper";
     private static final String DATABASE_NAME = "travelplanner.db";
-    private static final int DATABASE_VERSION = 14;
+    private static final int DATABASE_VERSION = 15;
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -49,7 +49,10 @@ public class DBHelper extends SQLiteOpenHelper {
                     "user_id INTEGER, " +
                     "type TEXT, " +
                     "ref_id INTEGER, " +
-                    "date TEXT);");
+                    "details TEXT, " +
+                    "date INTEGER, " +
+                    "confirmed INTEGER DEFAULT 1, " +
+                    "cancelled INTEGER DEFAULT 0);");
 
             // Cities
             db.execSQL("INSERT INTO cities (id, name) VALUES " +
@@ -112,6 +115,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS cities");
         db.execSQL("DROP TABLE IF EXISTS bookings");
         db.execSQL("DROP TABLE IF EXISTS favorites");
+        db.execSQL("DROP TABLE IF EXISTS users"); // drop legacy plaintext-password accounts
 
         onCreate(db);
     }
@@ -168,14 +172,46 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     // ---------------- Bookings ----------------
-    public void confirmBooking(int userId, String type, int refId, String date) {
-        SQLiteDatabase db = getWritableDatabase();
+    public long insertBooking(int userId, String type, int refId, String details, long dateMs) {
         ContentValues values = new ContentValues();
         values.put("user_id", userId);
         values.put("type", type);      // "hotel" or "flight"
         values.put("ref_id", refId);   // hotel or flight ID
-        values.put("date", date);      // e.g., "2025-08-26"
-        db.insert("bookings", null, values);
+        values.put("details", details);
+        values.put("date", dateMs);
+        values.put("confirmed", 1);
+        values.put("cancelled", 0);
+        return getWritableDatabase().insert("bookings", null, values);
+    }
+
+    public void updateBookingStatus(int userId, int id, boolean confirmed, boolean cancelled) {
+        ContentValues cv = new ContentValues();
+        cv.put("confirmed", confirmed ? 1 : 0);
+        cv.put("cancelled", cancelled ? 1 : 0);
+        getWritableDatabase().update("bookings", cv, "id=? AND user_id=?",
+                new String[]{String.valueOf(id), String.valueOf(userId)});
+    }
+
+    public void deleteBooking(int userId, int id) {
+        getWritableDatabase().delete("bookings", "id=? AND user_id=?",
+                new String[]{String.valueOf(id), String.valueOf(userId)});
+    }
+
+    public List<Booking> getAllBookings(int userId) {
+        List<Booking> out = new ArrayList<>();
+        Cursor c = getReadableDatabase().rawQuery(
+                "SELECT id, details, date, confirmed, cancelled FROM bookings WHERE user_id=? ORDER BY id DESC",
+                new String[]{String.valueOf(userId)});
+        while (c.moveToNext()) {
+            int id = c.getInt(0);
+            String details = c.getString(1);
+            long dateMs = c.getLong(2);
+            boolean confirmed = c.getInt(3) == 1;
+            boolean cancelled = c.getInt(4) == 1;
+            out.add(new Booking(id, details, dateMs, confirmed, cancelled));
+        }
+        c.close();
+        return out;
     }
 
     public void addToFavorites(int userId, String type, int refId){
@@ -202,35 +238,4 @@ public class DBHelper extends SQLiteOpenHelper {
         return exists;
     }
 
-    public List<String> getAllBookings(int userId) {
-        List<String> list = new ArrayList<>();
-        SQLiteDatabase db = getReadableDatabase();
-        Cursor c = db.rawQuery(
-                "SELECT b.type, b.ref_id, b.date, f.from_city, f.to_city, h.name, h.price " +
-                        "FROM bookings b " +
-                        "LEFT JOIN flights f ON b.type='flight' AND b.ref_id=f.id " +
-                        "LEFT JOIN hotels h ON b.type='hotel' AND b.ref_id=h.id " +
-                        "WHERE b.user_id=? ORDER BY b.id DESC",
-                new String[]{String.valueOf(userId)}
-        );
-        if (c.moveToFirst()) {
-            do {
-                String type = c.getString(c.getColumnIndexOrThrow("type"));
-                String date = c.getString(c.getColumnIndexOrThrow("date"));
-                String info = "";
-                if (type.equals("flight")) {
-                    String from = c.getString(c.getColumnIndexOrThrow("from_city"));
-                    String to = c.getString(c.getColumnIndexOrThrow("to_city"));
-                    info = type.toUpperCase() + ": " + from + " → " + to + " at " + date;
-                } else if (type.equals("hotel")) {
-                    String name = c.getString(c.getColumnIndexOrThrow("name"));
-                    double price = c.getDouble(c.getColumnIndexOrThrow("price"));
-                    info = type.toUpperCase() + ": " + name + " ($" + price + ") at " + date;
-                }
-                list.add(info);
-            } while (c.moveToNext());
-        }
-        c.close();
-        return list;
-    }
 }

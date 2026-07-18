@@ -4,54 +4,77 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class BookingHistoryFragment extends Fragment {
+public class BookingHistoryFragment extends Fragment implements BookingHistoryAdapter.Listener {
 
-    private RecyclerView recyclerView;
-    private Button btnConfirmCancel;
+    private RecyclerView rv;
+    private TextView tvEmpty;
     private BookingHistoryAdapter adapter;
-    private ConfirmedBookings viewModel;
-
-    private boolean isCurrent;
+    private DBHelper db;
+    private int userId;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_current_past_history, container, false);
+        View v = inflater.inflate(R.layout.fragment_booking_history, container, false);
 
-        recyclerView = view.findViewById(R.id.rv_booking_history);
-        btnConfirmCancel = view.findViewById(R.id.btn_confirm_cancel);
+        rv = v.findViewById(R.id.rvBookings);
+        tvEmpty = v.findViewById(R.id.tvEmpty);
+        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        viewModel = new ViewModelProvider(requireActivity()).get(ConfirmedBookings.class);
+        db = new DBHelper(requireContext());
+        userId = SessionManager.getUserId(requireContext());
 
-        Bundle args = getArguments();
-        List<Booking> bookings = null;
-        if (args != null) {
-            bookings = args.getParcelableArrayList("bookings");
-            isCurrent = args.getBoolean("isCurrent");
-        }
+        adapter = new BookingHistoryAdapter(new ArrayList<>(), this);
+        rv.setAdapter(adapter);
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new BookingHistoryAdapter(bookings, isCurrent);
-        recyclerView.setAdapter(adapter);
+        reload();
+        return v;
+    }
 
-        btnConfirmCancel.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
+    @Override
+    public void onResume() {
+        super.onResume();
+        reload();
+    }
 
-        viewModel.getConfirmedBookings().observe(getViewLifecycleOwner(), updatedBookings -> {
-            adapter.updateData(updatedBookings, isCurrent);
-        });
+    private void reload() {
+        List<Booking> list = db.getAllBookings(userId);
+        adapter.replaceData(list);
+        tvEmpty.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+    }
 
-        return view;
+    @Override
+    public void onConfirm(Booking b) {
+        db.updateBookingStatus(userId, b.id, true, false);
+        Toast.makeText(requireContext(), "Booking confirmed", Toast.LENGTH_SHORT).show();
+        reload();
+    }
+
+    @Override
+    public void onCancel(Booking b) {
+        db.updateBookingStatus(userId, b.id, false, true);
+        Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show();
+        reload();
+    }
+
+    @Override
+    public void onDelete(Booking b) {
+        db.deleteBooking(userId, b.id);
+        Toast.makeText(requireContext(), "Booking deleted", Toast.LENGTH_SHORT).show();
+        reload();
     }
 }
-

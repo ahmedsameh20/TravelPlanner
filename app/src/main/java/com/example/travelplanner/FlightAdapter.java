@@ -1,9 +1,8 @@
 package com.example.travelplanner;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +14,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
 
@@ -71,20 +72,25 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         int y = cal.get(Calendar.YEAR), m = cal.get(Calendar.MONTH), d = cal.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog dp = new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
-            String date = dayOfMonth + "/" + (month + 1) + "/" + year;
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            Calendar picked = Calendar.getInstance();
+            picked.set(year, month, dayOfMonth, 0, 0, 0);
+            long dateMs = picked.getTimeInMillis();
+            String dateStr = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(picked.getTime());
+            String details = flight.from + " → " + flight.to + " (" + flight.cls + ") — $" + flight.price;
 
-            ContentValues values = new ContentValues();
-            values.put("user_id", SessionManager.getUserId(context));
-            values.put("type", "flight");
-            values.put("ref_id", flight.id);
-            values.put("date", date);
-
-            long id = db.insert("bookings", null, values);
-            if (id > 0) {
-                Toast.makeText(context, "Flight booked on " + date + "\n" + flight.from + " → " + flight.to, Toast.LENGTH_SHORT).show();
-            }
+            new AlertDialog.Builder(context)
+                    .setTitle("Confirm booking")
+                    .setMessage("Book " + flight.from + " → " + flight.to + " for " + dateStr + " at $" + flight.price + "?")
+                    .setPositiveButton("Book", (dialog, which) -> {
+                        long id = dbHelper.insertBooking(SessionManager.getUserId(context), "flight", flight.id, details, dateMs);
+                        if (id > 0) {
+                            Toast.makeText(context, "Flight booked for " + dateStr + "\n" + flight.from + " → " + flight.to, Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }, y, m, d);
+        dp.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
         dp.show();
     }
 

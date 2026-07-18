@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -19,6 +20,7 @@ public class FavoritesFragment extends Fragment {
 
     private DBHelper dbHelper;
     private ListView listView;
+    private TextView tvEmpty;
     private final ArrayList<Integer> favIds = new ArrayList<>();
 
     @Nullable
@@ -28,6 +30,7 @@ public class FavoritesFragment extends Fragment {
 
         dbHelper = new DBHelper(getContext());
         listView = v.findViewById(R.id.favoritesListView);
+        tvEmpty = v.findViewById(R.id.tvEmpty);
 
         loadFavorites();
 
@@ -83,5 +86,6 @@ public class FavoritesFragment extends Fragment {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_list_item_1, favs);
         listView.setAdapter(adapter);
+        tvEmpty.setVisibility(favs.isEmpty() ? View.VISIBLE : View.GONE);
     }
 }

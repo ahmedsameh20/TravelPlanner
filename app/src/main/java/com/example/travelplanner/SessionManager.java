@@ -3,23 +3,13 @@ package com.example.travelplanner;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class SessionManager
-{
-    private static final String PREF_NAME = "travel_session";
-    public static void saveUser(Context ctx, int id, String name) {
-        SharedPreferences sp = ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sp.edit().putInt("user_id", id).putString("user_name", name).putBoolean("is_logged", true).apply();
+public final class SessionManager {
+    private SessionManager(){}
+    private static SharedPreferences sp(Context c){ return c.getSharedPreferences("session", Context.MODE_PRIVATE); }
+    public static void saveUser(Context c, int userId, String name){
+        sp(c).edit().putInt("user_id", userId).putString("user_name", name==null? "": name).apply();
     }
-    public static int getUserId(Context ctx) {
-        return ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).getInt("user_id", -1);
-    }
-    public static String getUserName(Context ctx) {
-        return ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).getString("user_name", "");
-    }
-    public static boolean isLogged(Context ctx) {
-        return ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).getBoolean("is_logged", false);
-    }
-    public static void logout(Context ctx) {
-        ctx.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit().clear().apply();
-    }
+    public static int getUserId(Context c){ return sp(c).getInt("user_id", -1); }
+    public static String getUserName(Context c){ return sp(c).getString("user_name", ""); }
+    public static void clear(Context c){ sp(c).edit().clear().apply(); }
 }
