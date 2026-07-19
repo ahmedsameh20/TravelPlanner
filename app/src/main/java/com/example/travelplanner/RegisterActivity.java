@@ -15,7 +15,7 @@ public class RegisterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
-        UsersRepo.ensureSchema(this);
+        Repo.auth().ensureSchema(this);
 
         etName = findViewById(getIdOrAlt(new String[]{"etName","name","username","fullName","et_full_name"}));
         etEmail = findViewById(getIdOrAlt(new String[]{"etEmail","email","etMail","txtEmail","inputEmail"}));
@@ -46,7 +46,7 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        long res = UsersRepo.register(this, name, email, pass);
+        long res = Repo.auth().register(this, name, email, pass);
         if (res > 0){
             Toast.makeText(this, "Registered successfully!", Toast.LENGTH_SHORT).show();
             finish();
@@ -54,9 +54,9 @@ public class RegisterActivity extends AppCompatActivity {
         }
         // Detailed reasons
         String msg;
-        if (res == UsersRepo.DUPLICATE_EMAIL) msg = "Email already exists.";
-        else if (res == UsersRepo.INVALID_INPUT) msg = "Email & Password required.";
-        else msg = "DB error: "+UsersRepo.lastError;
+        if (res == AuthRepository.DUPLICATE_EMAIL) msg = "Email already exists.";
+        else if (res == AuthRepository.INVALID_INPUT) msg = "Email & Password required.";
+        else msg = "DB error: "+Repo.auth().lastError();
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 

@@ -5,72 +5,65 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CitiesFragment extends Fragment {
+
+    private CityCardAdapter adapter;
+    private List<City> allCities = new ArrayList<>();
+
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_cities, container, false);
 
         RecyclerView rv = v.findViewById(R.id.rvList);
-        rv.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        DBHelper dbHelper = new DBHelper(requireContext());
-        int userId = SessionManager.getUserId(requireContext());
-        List<City> data = dbHelper.getAllCities();
+        TravelRepository repo = Repo.travel(requireContext());
+        allCities = repo.getCities();
 
-        SimpleAdapter<City> ad = new SimpleAdapter<>(data, new SimpleAdapter.Binder<City>() {
-            @Override
-            public void bind(SimpleAdapter.VH h, City item) {
-                h.tv1.setText(item.name);
-                boolean fav = dbHelper.isFavorite(userId, item.id, "city");
-                h.tv2.setText(fav ? "★ Favorite" : "City ID: " + item.id);
-                h.itemView.setOnClickListener(x -> {
-                    if (dbHelper.isFavorite(userId, item.id, "city")) {
-                        dbHelper.removeFromFavorites(userId, "city", item.id);
-                        h.tv2.setText("City ID: " + item.id);
-                        Toast.makeText(requireContext(), "Removed " + item.name + " from favorites", Toast.LENGTH_SHORT).show();
-                    } else {
-                        dbHelper.addToFavorites(userId, "city", item.id);
-                        h.tv2.setText("★ Favorite");
-                        Toast.makeText(requireContext(), "Added " + item.name + " to favorites", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-
-            @Override
-            public String asString(City item) {
-                return item.name;
+        adapter = new CityCardAdapter(requireContext(), repo, new ArrayList<>(allCities), city -> {
+            NavState.requestCityFilter(city.id);
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).selectTab(R.id.nav_hotels);
             }
         });
-
-        rv.setAdapter(ad);
+        rv.setAdapter(adapter);
 
         SearchView sv = v.findViewById(R.id.search_view);
         if (sv != null) {
             sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    ad.getFilter().filter(query);
+                    filter(query);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
-                    ad.getFilter().filter(newText);
+                    filter(newText);
                     return true;
                 }
             });
         }
 
         return v;
+    }
+
+    private void filter(String query) {
+        String q = query == null ? "" : query.toLowerCase().trim();
+        List<City> filtered = new ArrayList<>();
+        for (City c : allCities) {
+            if (q.isEmpty() || c.name.toLowerCase().contains(q)) filtered.add(c);
+        }
+        adapter.updateData(filtered);
     }
 }

@@ -1,8 +1,7 @@
 package com.example.travelplanner;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,22 +13,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
 
     private List<Flight> data;
     private List<Flight> dataFull;
-    private Context context;
-    private DBHelper dbHelper;
+    private final Context context;
+    private final TravelRepository repo;
 
-    public FlightAdapter(Context context, DBHelper dbHelper, List<Flight> data) {
+    public FlightAdapter(Context context, TravelRepository repo, List<Flight> data) {
         this.context = context;
-        this.dbHelper = dbHelper;
+        this.repo = repo;
         this.data = (data != null) ? data : new ArrayList<>();
         this.dataFull = new ArrayList<>(this.data);
     }
@@ -44,54 +40,40 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Flight f = data.get(position);
+        FlightMeta meta = FlightMeta.of(f);
         int userId = SessionManager.getUserId(context);
 
-        holder.title.setText(f.from + " → " + f.to);
-        holder.subtitle.setText(f.cls + " - $" + f.price);
+        holder.tvAirline.setText(meta.airline);
+        holder.tvDepartTime.setText(meta.departTime);
+        holder.tvArriveTime.setText(meta.arriveTime);
+        holder.tvFrom.setText(f.from);
+        holder.tvTo.setText(f.to);
+        holder.tvDuration.setText(meta.durationLabel());
+        holder.tvStops.setText(meta.stopsLabel());
+        holder.tvClassPrice.setText(f.cls + " · $" + f.price);
 
-        boolean fav = dbHelper.isFavorite(userId, f.id, "flight");
+        boolean fav = repo.isFavorite(userId, f.id, "flight");
         holder.ivFavorite.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
         holder.ivFavorite.setOnClickListener(v -> {
-            if (dbHelper.isFavorite(userId, f.id, "flight")) {
-                dbHelper.removeFromFavorites(userId, "flight", f.id);
+            if (repo.isFavorite(userId, f.id, "flight")) {
+                repo.removeFavorite(userId, "flight", f.id);
                 holder.ivFavorite.setImageResource(R.drawable.ic_heart_outline);
                 Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
             } else {
-                dbHelper.addToFavorites(userId, "flight", f.id);
+                repo.addFavorite(userId, "flight", f.id);
                 holder.ivFavorite.setImageResource(R.drawable.ic_heart_filled);
                 Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
             }
         });
 
-        holder.btnConfirm.setOnClickListener(v -> pickDateAndBook(f));
-    }
+        holder.btnConfirm.setOnClickListener(v -> BookingFlow.bookFlight(context, f, null));
 
-    private void pickDateAndBook(Flight flight) {
-        Calendar cal = Calendar.getInstance();
-        int y = cal.get(Calendar.YEAR), m = cal.get(Calendar.MONTH), d = cal.get(Calendar.DAY_OF_MONTH);
-
-        DatePickerDialog dp = new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
-            Calendar picked = Calendar.getInstance();
-            picked.set(year, month, dayOfMonth, 0, 0, 0);
-            long dateMs = picked.getTimeInMillis();
-            String dateStr = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(picked.getTime());
-            String details = flight.from + " → " + flight.to + " (" + flight.cls + ") — $" + flight.price;
-
-            new AlertDialog.Builder(context)
-                    .setTitle("Confirm booking")
-                    .setMessage("Book " + flight.from + " → " + flight.to + " for " + dateStr + " at $" + flight.price + "?")
-                    .setPositiveButton("Book", (dialog, which) -> {
-                        long id = dbHelper.insertBooking(SessionManager.getUserId(context), "flight", flight.id, details, dateMs);
-                        if (id > 0) {
-                            Toast.makeText(context, "Flight booked for " + dateStr + "\n" + flight.from + " → " + flight.to, Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        }, y, m, d);
-        dp.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
-        dp.show();
+        holder.cardRoot.setOnClickListener(v -> {
+            Intent intent = new Intent(context, FlightDetailActivity.class);
+            intent.putExtra(FlightDetailActivity.EXTRA_FLIGHT_ID, f.id);
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -99,6 +81,11 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         return data.size();
     }
 
+    public void updateData(List<Flight> newData) {
+        this.data = newData;
+        this.dataFull = new ArrayList<>(newData);
+        notifyDataSetChanged();
+    }
 
     public void filterFlights(String from, String to, String cls) {
         List<Flight> filteredList = new ArrayList<>();
@@ -113,15 +100,37 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         notifyDataSetChanged();
     }
 
+    public void sortByPrice(boolean ascending) {
+        if (ascending) {
+            data.sort((a, b) -> Double.compare(a.price, b.price));
+        } else {
+            data.sort((a, b) -> Double.compare(b.price, a.price));
+        }
+        notifyDataSetChanged();
+    }
+
+    public void sortByDuration() {
+        data.sort((a, b) -> Integer.compare(FlightMeta.of(a).durationMin, FlightMeta.of(b).durationMin));
+        notifyDataSetChanged();
+    }
+
     static class VH extends RecyclerView.ViewHolder {
-        TextView title, subtitle;
+        View cardRoot;
+        TextView tvAirline, tvDepartTime, tvArriveTime, tvFrom, tvTo, tvDuration, tvStops, tvClassPrice;
         ImageView ivFavorite;
         Button btnConfirm;
 
         public VH(@NonNull View itemView) {
             super(itemView);
-            title = itemView.findViewById(R.id.tvFlightTitle);
-            subtitle = itemView.findViewById(R.id.tvFlightSubtitle);
+            cardRoot = itemView.findViewById(R.id.cardRoot);
+            tvAirline = itemView.findViewById(R.id.tvAirline);
+            tvDepartTime = itemView.findViewById(R.id.tvDepartTime);
+            tvArriveTime = itemView.findViewById(R.id.tvArriveTime);
+            tvFrom = itemView.findViewById(R.id.tvFrom);
+            tvTo = itemView.findViewById(R.id.tvTo);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
+            tvStops = itemView.findViewById(R.id.tvStops);
+            tvClassPrice = itemView.findViewById(R.id.tvClassPrice);
             ivFavorite = itemView.findViewById(R.id.ivFavorite);
             btnConfirm = itemView.findViewById(R.id.btnConfirmFlight);
         }

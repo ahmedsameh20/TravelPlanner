@@ -16,7 +16,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        UsersRepo.ensureSchema(this);
+        Repo.auth().ensureSchema(this);
 
         etEmail = findAnyEditText(new String[]{"etEmail","email","etMail","txtEmail","inputEmail"});
         etPassword = findAnyEditText(new String[]{"etPassword","password","pass","etPass","inputPassword"});
@@ -35,7 +35,7 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        Cursor c = UsersRepo.login(this, email, pass);
+        Cursor c = Repo.auth().login(this, email, pass);
         if (c != null) {
             int id = c.getInt(0);
             String name = c.getString(1);

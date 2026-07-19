@@ -1,34 +1,36 @@
 package com.example.travelplanner;
 
-import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
 
-    private List<Hotel> hotels;
-    private Context context;
-    private DBHelper dbHelper;
+    private static final int[] PLACEHOLDERS = {
+            R.drawable.bg_placeholder_1, R.drawable.bg_placeholder_2, R.drawable.bg_placeholder_3,
+            R.drawable.bg_placeholder_4, R.drawable.bg_placeholder_5, R.drawable.bg_placeholder_6
+    };
 
-    public HotelAdapter(Context context, DBHelper dbHelper, List<Hotel> hotels) {
+    private List<Hotel> hotels;
+    private final Context context;
+    private final TravelRepository repo;
+
+    public HotelAdapter(Context context, TravelRepository repo, List<Hotel> hotels) {
         this.context = context;
-        this.dbHelper = dbHelper;
+        this.repo = repo;
         this.hotels = (hotels != null) ? hotels : new ArrayList<>();
     }
 
@@ -42,56 +44,88 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Hotel h = hotels.get(position);
+        HotelMeta meta = HotelMeta.of(h);
         int userId = SessionManager.getUserId(context);
 
         holder.tvHotelName.setText(h.name);
-        holder.tvHotelDetails.setText("Price: $" + h.price);
+        holder.tvHotelDetails.setText("$" + h.price + " / night");
+        holder.tvRating.setText(String.valueOf(meta.rating));
+        holder.tvReviews.setText("(" + meta.reviewCount + " reviews)");
+        holder.ivHotelImage.setBackgroundResource(PLACEHOLDERS[(meta.imageVariant - 1) % PLACEHOLDERS.length]);
 
-        boolean fav = dbHelper.isFavorite(userId, h.id, "hotel");
+        if (meta.badge != null) {
+            holder.tvBadge.setVisibility(View.VISIBLE);
+            holder.tvBadge.setText(meta.badge);
+            if ("Best Price".equals(meta.badge)) {
+                holder.tvBadge.setBackgroundResource(R.drawable.bg_badge_best_price);
+                holder.tvBadge.setTextColor(context.getColor(R.color.badgeBestPriceText));
+            } else {
+                holder.tvBadge.setBackgroundResource(R.drawable.bg_badge_popular);
+                holder.tvBadge.setTextColor(context.getColor(R.color.badgePopularText));
+            }
+        } else {
+            holder.tvBadge.setVisibility(View.GONE);
+        }
+
+        holder.rowAmenities.removeAllViews();
+        for (String amenity : meta.amenities) {
+            holder.rowAmenities.addView(buildAmenityChip(amenity));
+        }
+
+        boolean fav = repo.isFavorite(userId, h.id, "hotel");
         holder.btnFav.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
-
         holder.btnFav.setOnClickListener(v -> {
-            if (dbHelper.isFavorite(userId, h.id, "hotel")) {
-                dbHelper.removeFromFavorites(userId, "hotel", h.id);
+            if (repo.isFavorite(userId, h.id, "hotel")) {
+                repo.removeFavorite(userId, "hotel", h.id);
                 holder.btnFav.setImageResource(R.drawable.ic_heart_outline);
                 Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
             } else {
-                dbHelper.addToFavorites(userId, "hotel", h.id);
+                repo.addFavorite(userId, "hotel", h.id);
                 holder.btnFav.setImageResource(R.drawable.ic_heart_filled);
                 Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
             }
         });
 
+        holder.btnConfirm.setOnClickListener(v -> BookingFlow.bookHotel(context, h, null));
 
-        holder.btnConfirm.setOnClickListener(v -> pickDateAndBook(h));
+        holder.cardRoot.setOnClickListener(v -> {
+            Intent intent = new Intent(context, HotelDetailActivity.class);
+            intent.putExtra(HotelDetailActivity.EXTRA_HOTEL_ID, h.id);
+            context.startActivity(intent);
+        });
     }
 
-    private void pickDateAndBook(Hotel hotel) {
-        Calendar cal = Calendar.getInstance();
-        int y = cal.get(Calendar.YEAR), m = cal.get(Calendar.MONTH), d = cal.get(Calendar.DAY_OF_MONTH);
+    private View buildAmenityChip(String amenity) {
+        TextView tv = new TextView(context);
+        tv.setText(amenity);
+        tv.setTextSize(11f);
+        tv.setTextColor(context.getColor(R.color.textSecondary));
+        tv.setPadding(dp(8), dp(3), dp(8), dp(3));
+        tv.setBackgroundResource(R.drawable.bg_chip_grey);
+        int icon = iconFor(amenity);
+        if (icon != 0) {
+            tv.setCompoundDrawablesWithIntrinsicBounds(icon, 0, 0, 0);
+            tv.setCompoundDrawablePadding(dp(4));
+        }
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMarginEnd(dp(6));
+        tv.setLayoutParams(lp);
+        return tv;
+    }
 
-        DatePickerDialog dp = new DatePickerDialog(context, (view, year, month, dayOfMonth) -> {
-            Calendar picked = Calendar.getInstance();
-            picked.set(year, month, dayOfMonth, 0, 0, 0);
-            long dateMs = picked.getTimeInMillis();
-            String dateStr = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(picked.getTime());
-            String details = hotel.name + " — $" + hotel.price;
+    private int iconFor(String amenity) {
+        switch (amenity) {
+            case "WiFi": return R.drawable.ic_wifi;
+            case "Pool": return R.drawable.ic_pool;
+            case "Breakfast": return R.drawable.ic_breakfast;
+            default: return 0;
+        }
+    }
 
-            new AlertDialog.Builder(context)
-                    .setTitle("Confirm booking")
-                    .setMessage("Book " + hotel.name + " for " + dateStr + " at $" + hotel.price + "?")
-                    .setPositiveButton("Book", (dialog, which) -> {
-                        long id = dbHelper.insertBooking(SessionManager.getUserId(context), "hotel", hotel.id, details, dateMs);
-                        if (id > 0) {
-                            Toast.makeText(context, "Hotel booked for " + dateStr + "\n" + hotel.name, Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        }, y, m, d);
-        dp.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
-        dp.show();
+    private int dp(int value) {
+        return Math.round(value * context.getResources().getDisplayMetrics().density);
     }
 
     @Override
@@ -105,14 +139,22 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
     }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView tvHotelName, tvHotelDetails;
+        View cardRoot, ivHotelImage;
+        TextView tvHotelName, tvHotelDetails, tvRating, tvReviews, tvBadge;
+        LinearLayout rowAmenities;
         ImageButton btnFav;
         Button btnConfirm;
 
         public VH(@NonNull View itemView) {
             super(itemView);
+            cardRoot = itemView.findViewById(R.id.cardRoot);
+            ivHotelImage = itemView.findViewById(R.id.ivHotelImage);
             tvHotelName = itemView.findViewById(R.id.tvHotelName);
             tvHotelDetails = itemView.findViewById(R.id.tvHotelDetails);
+            tvRating = itemView.findViewById(R.id.tvRating);
+            tvReviews = itemView.findViewById(R.id.tvReviews);
+            tvBadge = itemView.findViewById(R.id.tvBadge);
+            rowAmenities = itemView.findViewById(R.id.rowAmenities);
             btnFav = itemView.findViewById(R.id.btnFav);
             btnConfirm = itemView.findViewById(R.id.btnConfirmBooking);
         }

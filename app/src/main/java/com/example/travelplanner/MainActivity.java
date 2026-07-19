@@ -36,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
         if (s == null) getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CitiesFragment()).commit();
     }
 
+    public void selectTab(int itemId) {
+        BottomNavigationView nav = findViewById(R.id.bottom_navigation);
+        nav.setSelectedItemId(itemId);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);

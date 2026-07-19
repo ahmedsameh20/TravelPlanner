@@ -1,11 +1,45 @@
 <resources>
-    <color name="brandPrimary">#1976D2</color>
-    <color name="brandAccent">#FF6F00</color>
-    <color name="nav_checked">#1976D2</color>
+    <!-- Brand palette (Booking.com-style deep blue + gold accent) -->
+    <color name="brandPrimary">#0B4F9C</color>
+    <color name="brandPrimaryDark">#083A73</color>
+    <color name="brandAccent">#FFB300</color>
+
+    <color name="nav_checked">#0B4F9C</color>
     <color name="nav_unchecked">#9E9E9E</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
-    <color name="teal_200">#03DAC5</color>
+
+    <!-- Kept for any lingering references; app now themes off brandPrimary -->
+    <color name="purple_500">#0B4F9C</color>
+    <color name="purple_700">#083A73</color>
+    <color name="teal_200">#FFB300</color>
+
+    <!-- Surfaces & text -->
+    <color name="screenBackground">#F5F7FA</color>
+    <color name="cardBackground">#FFFFFF</color>
+    <color name="textPrimary">#1F2937</color>
+    <color name="textSecondary">#6B7280</color>
+    <color name="textMuted">#9CA3AF</color>
+    <color name="divider">#E5E7EB</color>
+
+    <!-- Ratings & badges -->
+    <color name="ratingGold">#FFB300</color>
+    <color name="badgePopularBg">#E8F0FE</color>
+    <color name="badgePopularText">#0B4F9C</color>
+    <color name="badgeBestPriceBg">#FFF4E0</color>
+    <color name="badgeBestPriceText">#B45309</color>
+
+    <!-- Placeholder image gradients (id-seeded picks one of six) -->
+    <color name="ph1Start">#2E86AB</color>
+    <color name="ph1End">#6EC6E8</color>
+    <color name="ph2Start">#FF7E5F</color>
+    <color name="ph2End">#FEB47B</color>
+    <color name="ph3Start">#2C7744</color>
+    <color name="ph3End">#6FCF97</color>
+    <color name="ph4Start">#6A5ACD</color>
+    <color name="ph4End">#B39DDB</color>
+    <color name="ph5Start">#F2745B</color>
+    <color name="ph5End">#FFB88C</color>
+    <color name="ph6Start">#485563</color>
+    <color name="ph6End">#29323C</color>
 </resources>
