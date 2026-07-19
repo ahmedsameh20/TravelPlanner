@@ -24,7 +24,6 @@ public class RegisterActivity extends AppCompatActivity {
         Button btn = findViewById(getIdOrAlt(new String[]{"btnCreate","btnSave","btnRegister","register","btnSignup","signUp","buttonRegister"}));
         if (btn != null) {
             btn.setOnClickListener(v -> doRegister());
-            btn.setOnLongClickListener(v -> { UsersRepo.dumpUsers(this); Toast.makeText(this,"Dumped users to Logcat",Toast.LENGTH_SHORT).show(); return true; });
         }
     }
 
@@ -46,18 +45,18 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        long res = Repo.auth().register(this, name, email, pass);
-        if (res > 0){
-            Toast.makeText(this, "Registered successfully!", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-        // Detailed reasons
-        String msg;
-        if (res == AuthRepository.DUPLICATE_EMAIL) msg = "Email already exists.";
-        else if (res == AuthRepository.INVALID_INPUT) msg = "Email & Password required.";
-        else msg = "DB error: "+Repo.auth().lastError();
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        Repo.auth().register(this, name, email, pass, new AuthRepository.AuthCallback() {
+            @Override
+            public void onSuccess(String userId, String resultName) {
+                Toast.makeText(RegisterActivity.this, "Registered successfully!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private static String safeText(EditText e){ return e==null? "": String.valueOf(e.getText()).trim(); }

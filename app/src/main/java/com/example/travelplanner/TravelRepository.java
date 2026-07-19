@@ -4,27 +4,27 @@ import java.util.List;
 
 /**
  * Contract for cities/hotels/flights/bookings/favorites access.
- * {@link SqliteTravelRepository} is the only implementation today; a future
- * Firestore-backed implementation can drop in behind {@link Repo#travel}
- * without touching any fragment/adapter.
+ * {@link SqliteTravelRepository} and {@link FirestoreTravelRepository} are
+ * the two implementations behind {@link Repo#travel}. All methods are async:
+ * SQLite invokes the callback immediately (synchronously), Firestore attaches
+ * it to the underlying Task's listeners.
  */
 public interface TravelRepository {
-    List<City> getCities();
+    void getCities(Callback<List<City>> cb);
 
-    List<Hotel> getHotels();
-    List<Hotel> getHotelsByCity(int cityId);
-    Hotel getHotel(int id);
+    void getHotels(Callback<List<Hotel>> cb);
+    void getHotelsByCity(int cityId, Callback<List<Hotel>> cb);
+    void getHotel(int id, Callback<Hotel> cb);
 
-    List<Flight> getFlights();
-    Flight getFlight(int id);
+    void getFlights(Callback<List<Flight>> cb);
+    void getFlight(int id, Callback<Flight> cb);
 
-    long insertBooking(int userId, String type, int refId, String details, long dateMs);
-    void updateBookingStatus(int userId, int bookingId, boolean confirmed, boolean cancelled);
-    void deleteBooking(int userId, int bookingId);
-    List<Booking> getBookings(int userId);
+    void insertBooking(String userId, String type, int refId, String details, long dateMs, Callback<Void> cb);
+    void updateBookingStatus(String userId, String bookingId, boolean confirmed, boolean cancelled, Callback<Void> cb);
+    void deleteBooking(String userId, String bookingId, Callback<Void> cb);
+    void getBookings(String userId, Callback<List<Booking>> cb);
 
-    void addFavorite(int userId, String type, int refId);
-    void removeFavorite(int userId, String type, int refId);
-    boolean isFavorite(int userId, int refId, String type);
-    List<FavoriteItem> getFavorites(int userId);
+    void addFavorite(String userId, String type, int refId, Callback<Void> cb);
+    void removeFavorite(String userId, String type, int refId, Callback<Void> cb);
+    void getFavorites(String userId, Callback<List<FavoriteItem>> cb);
 }

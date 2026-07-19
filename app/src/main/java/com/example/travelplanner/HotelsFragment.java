@@ -6,7 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,7 +21,9 @@ import com.google.android.material.chip.ChipGroup;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HotelsFragment extends Fragment {
 
@@ -27,6 +31,7 @@ public class HotelsFragment extends Fragment {
     private RecyclerView recyclerHotels;
     private Spinner spinnerCities;
     private ChipGroup chipGroupSort;
+    private ProgressBar progress;
     private HotelAdapter adapter;
     private List<Hotel> allHotels = new ArrayList<>();
     private List<City> cities = new ArrayList<>();
@@ -46,17 +51,73 @@ public class HotelsFragment extends Fragment {
 
         spinnerCities = v.findViewById(R.id.spinnerCities);
         chipGroupSort = v.findViewById(R.id.chipGroupSort);
+        progress = v.findViewById(R.id.progress);
 
-        allHotels = repo.getHotels();
-        cities = repo.getCities();
-
-        adapter = new HotelAdapter(requireContext(), repo, allHotels);
-        recyclerHotels.setAdapter(adapter);
-
-        setupSpinner();
-        chipGroupSort.setOnCheckedStateChangeListener((group, checkedIds) -> applyFilters());
+        loadData();
 
         return v;
+    }
+
+    private void loadData() {
+        progress.setVisibility(View.VISIBLE);
+        repo.getCities(new Callback<List<City>>() {
+            @Override
+            public void onSuccess(List<City> citiesResult) {
+                if (!isAdded()) return;
+                cities = citiesResult;
+                repo.getHotels(new Callback<List<Hotel>>() {
+                    @Override
+                    public void onSuccess(List<Hotel> hotelsResult) {
+                        if (!isAdded()) return;
+                        allHotels = hotelsResult;
+                        loadFavoritesAndRender();
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        if (!isAdded()) return;
+                        showError(e);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+                showError(e);
+            }
+        });
+    }
+
+    private void loadFavoritesAndRender() {
+        String userId = SessionManager.getUserId(requireContext());
+        repo.getFavorites(userId, new Callback<List<FavoriteItem>>() {
+            @Override
+            public void onSuccess(List<FavoriteItem> favs) {
+                if (!isAdded()) return;
+                Set<String> keys = new HashSet<>();
+                for (FavoriteItem f : favs) keys.add(f.type + ":" + f.refId);
+
+                progress.setVisibility(View.GONE);
+                adapter = new HotelAdapter(requireContext(), repo, allHotels, keys);
+                recyclerHotels.setAdapter(adapter);
+
+                setupSpinner();
+                chipGroupSort.setOnCheckedStateChangeListener((group, checkedIds) -> applyFilters());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+                showError(e);
+            }
+        });
+    }
+
+    private void showError(Exception e) {
+        if (!isAdded()) return;
+        progress.setVisibility(View.GONE);
+        Toast.makeText(requireContext(), "Failed to load hotels: " + e.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private void setupSpinner() {

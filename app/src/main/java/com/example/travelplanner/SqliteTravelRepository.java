@@ -7,6 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Local-only implementation backed by {@link DBHelper}. Callbacks are
+ * invoked synchronously (local disk reads are fast) — kept for reference /
+ * offline mode; {@link Repo} points at {@link FirestoreTravelRepository} by
+ * default. Only ever paired with {@link SqliteAuthRepository}, whose user
+ * ids are always the string form of a SQLite rowid, so parsing back to int
+ * here is safe.
+ */
 public class SqliteTravelRepository implements TravelRepository {
 
     private final DBHelper db;
@@ -15,90 +23,99 @@ public class SqliteTravelRepository implements TravelRepository {
         this.db = new DBHelper(ctx.getApplicationContext());
     }
 
-    @Override
-    public List<City> getCities() {
-        return db.getAllCities();
+    private static int uid(String userId) {
+        try { return Integer.parseInt(userId); } catch (Exception e) { return -1; }
     }
 
     @Override
-    public List<Hotel> getHotels() {
-        return db.getAllHotels();
+    public void getCities(Callback<List<City>> cb) {
+        try { cb.onSuccess(db.getAllCities()); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public List<Hotel> getHotelsByCity(int cityId) {
-        List<Hotel> out = new ArrayList<>();
-        for (Hotel h : db.getAllHotels()) if (h.cityId == cityId) out.add(h);
-        return out;
+    public void getHotels(Callback<List<Hotel>> cb) {
+        try { cb.onSuccess(db.getAllHotels()); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public Hotel getHotel(int id) {
-        for (Hotel h : db.getAllHotels()) if (h.id == id) return h;
-        return null;
+    public void getHotelsByCity(int cityId, Callback<List<Hotel>> cb) {
+        try {
+            List<Hotel> out = new ArrayList<>();
+            for (Hotel h : db.getAllHotels()) if (h.cityId == cityId) out.add(h);
+            cb.onSuccess(out);
+        } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public List<Flight> getFlights() {
-        return db.getAllFlights();
+    public void getHotel(int id, Callback<Hotel> cb) {
+        try {
+            Hotel found = null;
+            for (Hotel h : db.getAllHotels()) if (h.id == id) { found = h; break; }
+            cb.onSuccess(found);
+        } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public Flight getFlight(int id) {
-        for (Flight f : db.getAllFlights()) if (f.id == id) return f;
-        return null;
+    public void getFlights(Callback<List<Flight>> cb) {
+        try { cb.onSuccess(db.getAllFlights()); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public long insertBooking(int userId, String type, int refId, String details, long dateMs) {
-        return db.insertBooking(userId, type, refId, details, dateMs);
+    public void getFlight(int id, Callback<Flight> cb) {
+        try {
+            Flight found = null;
+            for (Flight f : db.getAllFlights()) if (f.id == id) { found = f; break; }
+            cb.onSuccess(found);
+        } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public void updateBookingStatus(int userId, int bookingId, boolean confirmed, boolean cancelled) {
-        db.updateBookingStatus(userId, bookingId, confirmed, cancelled);
+    public void insertBooking(String userId, String type, int refId, String details, long dateMs, Callback<Void> cb) {
+        try { db.insertBooking(uid(userId), type, refId, details, dateMs); cb.onSuccess(null); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public void deleteBooking(int userId, int bookingId) {
-        db.deleteBooking(userId, bookingId);
+    public void updateBookingStatus(String userId, String bookingId, boolean confirmed, boolean cancelled, Callback<Void> cb) {
+        try { db.updateBookingStatus(uid(userId), Integer.parseInt(bookingId), confirmed, cancelled); cb.onSuccess(null); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public List<Booking> getBookings(int userId) {
-        return db.getAllBookings(userId);
+    public void deleteBooking(String userId, String bookingId, Callback<Void> cb) {
+        try { db.deleteBooking(uid(userId), Integer.parseInt(bookingId)); cb.onSuccess(null); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public void addFavorite(int userId, String type, int refId) {
-        db.addToFavorites(userId, type, refId);
+    public void getBookings(String userId, Callback<List<Booking>> cb) {
+        try { cb.onSuccess(db.getAllBookings(uid(userId))); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public void removeFavorite(int userId, String type, int refId) {
-        db.removeFromFavorites(userId, type, refId);
+    public void addFavorite(String userId, String type, int refId, Callback<Void> cb) {
+        try { db.addToFavorites(uid(userId), type, refId); cb.onSuccess(null); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public boolean isFavorite(int userId, int refId, String type) {
-        return db.isFavorite(userId, refId, type);
+    public void removeFavorite(String userId, String type, int refId, Callback<Void> cb) {
+        try { db.removeFromFavorites(uid(userId), type, refId); cb.onSuccess(null); } catch (Exception e) { cb.onError(e); }
     }
 
     @Override
-    public List<FavoriteItem> getFavorites(int userId) {
-        List<FavoriteItem> out = new ArrayList<>();
-        SQLiteDatabase rdb = db.getReadableDatabase();
-        Cursor c = rdb.rawQuery(
-                "SELECT id, type, ref_id FROM favorites WHERE user_id=? ORDER BY id DESC",
-                new String[]{String.valueOf(userId)});
-        while (c.moveToNext()) {
-            int favId = c.getInt(0);
-            String type = c.getString(1);
-            int refId = c.getInt(2);
-            out.add(new FavoriteItem(favId, type, refId, resolveTitle(rdb, type, refId)));
-        }
-        c.close();
-        return out;
+    public void getFavorites(String userId, Callback<List<FavoriteItem>> cb) {
+        try {
+            List<FavoriteItem> out = new ArrayList<>();
+            SQLiteDatabase rdb = db.getReadableDatabase();
+            Cursor c = rdb.rawQuery(
+                    "SELECT id, type, ref_id FROM favorites WHERE user_id=? ORDER BY id DESC",
+                    new String[]{String.valueOf(uid(userId))});
+            while (c.moveToNext()) {
+                int favId = c.getInt(0);
+                String type = c.getString(1);
+                int refId = c.getInt(2);
+                out.add(new FavoriteItem(String.valueOf(favId), type, refId, resolveTitle(rdb, type, refId)));
+            }
+            c.close();
+            cb.onSuccess(out);
+        } catch (Exception e) { cb.onError(e); }
     }
 
     private String resolveTitle(SQLiteDatabase rdb, String type, int refId) {

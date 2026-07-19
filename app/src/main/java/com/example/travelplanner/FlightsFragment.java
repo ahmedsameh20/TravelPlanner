@@ -8,7 +8,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -17,13 +19,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.ChipGroup;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FlightsFragment extends Fragment {
 
     private FlightAdapter adapter;
     private List<Flight> data;
     private TravelRepository repo;
+    private ProgressBar progress;
 
     @Nullable
     @Override
@@ -31,14 +36,10 @@ public class FlightsFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_flights, container, false);
 
         repo = Repo.travel(requireContext());
+        progress = v.findViewById(R.id.progress);
 
         RecyclerView rv = v.findViewById(R.id.rvFlights);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-        data = repo.getFlights();
-
-        adapter = new FlightAdapter(requireContext(), repo, data);
-        rv.setAdapter(adapter);
 
         EditText etFrom = v.findViewById(R.id.etFrom);
         EditText etTo = v.findViewById(R.id.etTo);
@@ -59,6 +60,7 @@ public class FlightsFragment extends Fragment {
         });
 
         btnSearch.setOnClickListener(click -> {
+            if (adapter == null) return;
             String from = etFrom.getText().toString().trim().toLowerCase();
             String to = etTo.getText().toString().trim().toLowerCase();
             String cls = spClass.getSelectedItem() != null ? spClass.getSelectedItem().toString().trim().toLowerCase() : "";
@@ -66,12 +68,57 @@ public class FlightsFragment extends Fragment {
         });
 
         chipGroupSort.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (adapter == null) return;
             int checkedId = chipGroupSort.getCheckedChipId();
             if (checkedId == R.id.chipFlightPriceAsc) adapter.sortByPrice(true);
             else if (checkedId == R.id.chipFlightPriceDesc) adapter.sortByPrice(false);
             else if (checkedId == R.id.chipFlightDuration) adapter.sortByDuration();
         });
 
+        loadData(rv);
+
         return v;
+    }
+
+    private void loadData(RecyclerView rv) {
+        progress.setVisibility(View.VISIBLE);
+        repo.getFlights(new Callback<List<Flight>>() {
+            @Override
+            public void onSuccess(List<Flight> flightsResult) {
+                if (!isAdded()) return;
+                data = flightsResult;
+                String userId = SessionManager.getUserId(requireContext());
+                repo.getFavorites(userId, new Callback<List<FavoriteItem>>() {
+                    @Override
+                    public void onSuccess(List<FavoriteItem> favs) {
+                        if (!isAdded()) return;
+                        Set<String> keys = new HashSet<>();
+                        for (FavoriteItem f : favs) keys.add(f.type + ":" + f.refId);
+
+                        progress.setVisibility(View.GONE);
+                        adapter = new FlightAdapter(requireContext(), repo, data, keys);
+                        rv.setAdapter(adapter);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        if (!isAdded()) return;
+                        showError(e);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+                showError(e);
+            }
+        });
+    }
+
+    private void showError(Exception e) {
+        if (!isAdded()) return;
+        progress.setVisibility(View.GONE);
+        Toast.makeText(requireContext(), "Failed to load flights: " + e.getMessage(), Toast.LENGTH_SHORT).show();
     }
 }

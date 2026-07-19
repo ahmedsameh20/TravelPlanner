@@ -20,11 +20,18 @@ public final class BookingFlow {
     public static void bookHotel(Context context, Hotel hotel, OnBooked callback) {
         pickDateAndConfirm(context, "Book " + hotel.name, hotel.price, (dateStr, dateMs) -> {
             String details = hotel.name + " — $" + hotel.price;
-            long id = Repo.travel(context).insertBooking(SessionManager.getUserId(context), "hotel", hotel.id, details, dateMs);
-            if (id > 0) {
-                Toast.makeText(context, "Hotel booked for " + dateStr + "\n" + hotel.name, Toast.LENGTH_SHORT).show();
-                if (callback != null) callback.onBooked();
-            }
+            Repo.travel(context).insertBooking(SessionManager.getUserId(context), "hotel", hotel.id, details, dateMs, new Callback<Void>() {
+                @Override
+                public void onSuccess(Void value) {
+                    Toast.makeText(context, "Hotel booked for " + dateStr + "\n" + hotel.name, Toast.LENGTH_SHORT).show();
+                    if (callback != null) callback.onBooked();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Toast.makeText(context, "Booking failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 
@@ -32,11 +39,18 @@ public final class BookingFlow {
         String title = "Book " + flight.from + " → " + flight.to;
         pickDateAndConfirm(context, title, flight.price, (dateStr, dateMs) -> {
             String details = flight.from + " → " + flight.to + " (" + flight.cls + ") — $" + flight.price;
-            long id = Repo.travel(context).insertBooking(SessionManager.getUserId(context), "flight", flight.id, details, dateMs);
-            if (id > 0) {
-                Toast.makeText(context, "Flight booked for " + dateStr + "\n" + flight.from + " → " + flight.to, Toast.LENGTH_SHORT).show();
-                if (callback != null) callback.onBooked();
-            }
+            Repo.travel(context).insertBooking(SessionManager.getUserId(context), "flight", flight.id, details, dateMs, new Callback<Void>() {
+                @Override
+                public void onSuccess(Void value) {
+                    Toast.makeText(context, "Flight booked for " + dateStr + "\n" + flight.from + " → " + flight.to, Toast.LENGTH_SHORT).show();
+                    if (callback != null) callback.onBooked();
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    Toast.makeText(context, "Booking failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 

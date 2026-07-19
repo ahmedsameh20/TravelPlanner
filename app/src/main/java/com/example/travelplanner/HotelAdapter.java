@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
 
@@ -27,11 +28,13 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
     private List<Hotel> hotels;
     private final Context context;
     private final TravelRepository repo;
+    private final Set<String> favoriteKeys;
 
-    public HotelAdapter(Context context, TravelRepository repo, List<Hotel> hotels) {
+    public HotelAdapter(Context context, TravelRepository repo, List<Hotel> hotels, Set<String> favoriteKeys) {
         this.context = context;
         this.repo = repo;
         this.hotels = (hotels != null) ? hotels : new ArrayList<>();
+        this.favoriteKeys = favoriteKeys;
     }
 
     @NonNull
@@ -45,7 +48,8 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Hotel h = hotels.get(position);
         HotelMeta meta = HotelMeta.of(h);
-        int userId = SessionManager.getUserId(context);
+        String userId = SessionManager.getUserId(context);
+        String favKey = "hotel:" + h.id;
 
         holder.tvHotelName.setText(h.name);
         holder.tvHotelDetails.setText("$" + h.price + " / night");
@@ -72,18 +76,25 @@ public class HotelAdapter extends RecyclerView.Adapter<HotelAdapter.VH> {
             holder.rowAmenities.addView(buildAmenityChip(amenity));
         }
 
-        boolean fav = repo.isFavorite(userId, h.id, "hotel");
-        holder.btnFav.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+        holder.btnFav.setImageResource(favoriteKeys.contains(favKey) ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
         holder.btnFav.setOnClickListener(v -> {
-            if (repo.isFavorite(userId, h.id, "hotel")) {
-                repo.removeFavorite(userId, "hotel", h.id);
-                holder.btnFav.setImageResource(R.drawable.ic_heart_outline);
-                Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
+            if (favoriteKeys.contains(favKey)) {
+                repo.removeFavorite(userId, "hotel", h.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.remove(favKey);
+                        holder.btnFav.setImageResource(R.drawable.ic_heart_outline);
+                        Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
-                repo.addFavorite(userId, "hotel", h.id);
-                holder.btnFav.setImageResource(R.drawable.ic_heart_filled);
-                Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
+                repo.addFavorite(userId, "hotel", h.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.add(favKey);
+                        holder.btnFav.setImageResource(R.drawable.ic_heart_filled);
+                        Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 

@@ -16,7 +16,7 @@ public final class Repo {
     public static TravelRepository travel(Context ctx) {
         if (travelRepo == null) {
             synchronized (Repo.class) {
-                if (travelRepo == null) travelRepo = new SqliteTravelRepository(ctx);
+                if (travelRepo == null) travelRepo = new FirestoreTravelRepository();
             }
         }
         return travelRepo;
@@ -25,7 +25,7 @@ public final class Repo {
     public static AuthRepository auth() {
         if (authRepo == null) {
             synchronized (Repo.class) {
-                if (authRepo == null) authRepo = new SqliteAuthRepository();
+                if (authRepo == null) authRepo = new FirebaseAuthRepository();
             }
         }
         return authRepo;

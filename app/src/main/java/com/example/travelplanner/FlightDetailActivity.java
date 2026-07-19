@@ -2,6 +2,7 @@ package com.example.travelplanner;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -25,12 +26,22 @@ public class FlightDetailActivity extends AppCompatActivity {
 
         int flightId = getIntent().getIntExtra(EXTRA_FLIGHT_ID, -1);
         TravelRepository repo = Repo.travel(this);
-        Flight flight = repo.getFlight(flightId);
-        if (flight == null) {
-            finish();
-            return;
-        }
+        repo.getFlight(flightId, new Callback<Flight>() {
+            @Override
+            public void onSuccess(Flight flight) {
+                if (flight == null) { finish(); return; }
+                render(flight);
+            }
 
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(FlightDetailActivity.this, "Failed to load flight: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+    }
+
+    private void render(Flight flight) {
         FlightMeta meta = FlightMeta.of(flight);
 
         findViewById(R.id.ivHero).setBackgroundResource(PLACEHOLDERS[flight.id % PLACEHOLDERS.length]);

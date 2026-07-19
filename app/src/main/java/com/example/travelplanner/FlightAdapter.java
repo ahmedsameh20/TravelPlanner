@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
 
@@ -22,12 +23,14 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
     private List<Flight> dataFull;
     private final Context context;
     private final TravelRepository repo;
+    private final Set<String> favoriteKeys;
 
-    public FlightAdapter(Context context, TravelRepository repo, List<Flight> data) {
+    public FlightAdapter(Context context, TravelRepository repo, List<Flight> data, Set<String> favoriteKeys) {
         this.context = context;
         this.repo = repo;
         this.data = (data != null) ? data : new ArrayList<>();
         this.dataFull = new ArrayList<>(this.data);
+        this.favoriteKeys = favoriteKeys;
     }
 
     @NonNull
@@ -41,7 +44,8 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Flight f = data.get(position);
         FlightMeta meta = FlightMeta.of(f);
-        int userId = SessionManager.getUserId(context);
+        String userId = SessionManager.getUserId(context);
+        String favKey = "flight:" + f.id;
 
         holder.tvAirline.setText(meta.airline);
         holder.tvDepartTime.setText(meta.departTime);
@@ -52,18 +56,25 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.VH> {
         holder.tvStops.setText(meta.stopsLabel());
         holder.tvClassPrice.setText(f.cls + " · $" + f.price);
 
-        boolean fav = repo.isFavorite(userId, f.id, "flight");
-        holder.ivFavorite.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+        holder.ivFavorite.setImageResource(favoriteKeys.contains(favKey) ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
         holder.ivFavorite.setOnClickListener(v -> {
-            if (repo.isFavorite(userId, f.id, "flight")) {
-                repo.removeFavorite(userId, "flight", f.id);
-                holder.ivFavorite.setImageResource(R.drawable.ic_heart_outline);
-                Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
+            if (favoriteKeys.contains(favKey)) {
+                repo.removeFavorite(userId, "flight", f.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.remove(favKey);
+                        holder.ivFavorite.setImageResource(R.drawable.ic_heart_outline);
+                        Toast.makeText(context, "Removed from favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
-                repo.addFavorite(userId, "flight", f.id);
-                holder.ivFavorite.setImageResource(R.drawable.ic_heart_filled);
-                Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
+                repo.addFavorite(userId, "flight", f.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.add(favKey);
+                        holder.ivFavorite.setImageResource(R.drawable.ic_heart_filled);
+                        Toast.makeText(context, "Added to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 

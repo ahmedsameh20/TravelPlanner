@@ -208,7 +208,7 @@ public class DBHelper extends SQLiteOpenHelper {
             long dateMs = c.getLong(2);
             boolean confirmed = c.getInt(3) == 1;
             boolean cancelled = c.getInt(4) == 1;
-            out.add(new Booking(id, details, dateMs, confirmed, cancelled));
+            out.add(new Booking(String.valueOf(id), details, dateMs, confirmed, cancelled));
         }
         c.close();
         return out;

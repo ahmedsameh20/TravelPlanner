@@ -6,7 +6,7 @@ import android.os.Parcelable;
 import java.util.Date;
 
 public class Booking implements Parcelable {
-    public int id;                // bookings.id
+    public String id;             // bookings doc id
     public String details;        // display text
     public long dateMs;           // travel date in millis
     public boolean isConfirmed;   // status
@@ -14,7 +14,7 @@ public class Booking implements Parcelable {
 
     public Booking() { }
 
-    public Booking(int id, String details, long dateMs, boolean confirmed, boolean cancelled) {
+    public Booking(String id, String details, long dateMs, boolean confirmed, boolean cancelled) {
         this.id = id;
         this.details = details;
         this.dateMs = dateMs;
@@ -26,7 +26,7 @@ public class Booking implements Parcelable {
 
     /* ====== Parcelable ====== */
     protected Booking(Parcel in) {
-        id = in.readInt();
+        id = in.readString();
         details = in.readString();
         dateMs = in.readLong();
         isConfirmed = in.readByte() != 0;
@@ -35,7 +35,7 @@ public class Booking implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(id);
+        dest.writeString(id);
         dest.writeString(details);
         dest.writeLong(dateMs);
         dest.writeByte((byte) (isConfirmed ? 1 : 0));

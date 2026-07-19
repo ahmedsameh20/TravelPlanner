@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,9 +21,10 @@ public class BookingHistoryFragment extends Fragment implements BookingHistoryAd
 
     private RecyclerView rv;
     private TextView tvEmpty;
+    private ProgressBar progress;
     private BookingHistoryAdapter adapter;
-    private DBHelper db;
-    private int userId;
+    private TravelRepository repo;
+    private String userId;
 
     @Nullable
     @Override
@@ -33,9 +35,10 @@ public class BookingHistoryFragment extends Fragment implements BookingHistoryAd
 
         rv = v.findViewById(R.id.rvBookings);
         tvEmpty = v.findViewById(R.id.tvEmpty);
+        progress = v.findViewById(R.id.progress);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        db = new DBHelper(requireContext());
+        repo = Repo.travel(requireContext());
         userId = SessionManager.getUserId(requireContext());
 
         adapter = new BookingHistoryAdapter(new ArrayList<>(), this);
@@ -52,29 +55,58 @@ public class BookingHistoryFragment extends Fragment implements BookingHistoryAd
     }
 
     private void reload() {
-        List<Booking> list = db.getAllBookings(userId);
-        adapter.replaceData(list);
-        tvEmpty.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+        if (progress != null) progress.setVisibility(View.VISIBLE);
+        repo.getBookings(userId, new Callback<List<Booking>>() {
+            @Override
+            public void onSuccess(List<Booking> list) {
+                if (!isAdded()) return;
+                if (progress != null) progress.setVisibility(View.GONE);
+                adapter.replaceData(list);
+                tvEmpty.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+                if (progress != null) progress.setVisibility(View.GONE);
+                Toast.makeText(requireContext(), "Failed to load bookings: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
     public void onConfirm(Booking b) {
-        db.updateBookingStatus(userId, b.id, true, false);
-        Toast.makeText(requireContext(), "Booking confirmed", Toast.LENGTH_SHORT).show();
-        reload();
+        repo.updateBookingStatus(userId, b.id, true, false, new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Booking confirmed", Toast.LENGTH_SHORT).show();
+                reload();
+            }
+        });
     }
 
     @Override
     public void onCancel(Booking b) {
-        db.updateBookingStatus(userId, b.id, false, true);
-        Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show();
-        reload();
+        repo.updateBookingStatus(userId, b.id, false, true, new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Booking cancelled", Toast.LENGTH_SHORT).show();
+                reload();
+            }
+        });
     }
 
     @Override
     public void onDelete(Booking b) {
-        db.deleteBooking(userId, b.id);
-        Toast.makeText(requireContext(), "Booking deleted", Toast.LENGTH_SHORT).show();
-        reload();
+        repo.deleteBooking(userId, b.id, new Callback<Void>() {
+            @Override
+            public void onSuccess(Void value) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Booking deleted", Toast.LENGTH_SHORT).show();
+                reload();
+            }
+        });
     }
 }

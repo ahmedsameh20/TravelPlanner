@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -29,15 +30,35 @@ public class HotelDetailActivity extends AppCompatActivity {
 
         int hotelId = getIntent().getIntExtra(EXTRA_HOTEL_ID, -1);
         TravelRepository repo = Repo.travel(this);
-        Hotel hotel = repo.getHotel(hotelId);
-        if (hotel == null) {
-            finish();
-            return;
-        }
+        repo.getHotel(hotelId, new Callback<Hotel>() {
+            @Override
+            public void onSuccess(Hotel hotel) {
+                if (hotel == null) { finish(); return; }
+                repo.getCities(new Callback<List<City>>() {
+                    @Override
+                    public void onSuccess(List<City> cities) {
+                        City city = null;
+                        for (City c : cities) if (c.id == hotel.cityId) { city = c; break; }
+                        render(hotel, city);
+                    }
 
+                    @Override
+                    public void onError(Exception e) {
+                        render(hotel, null);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(HotelDetailActivity.this, "Failed to load hotel: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+    }
+
+    private void render(Hotel hotel, City city) {
         HotelMeta meta = HotelMeta.of(hotel);
-        City city = null;
-        for (City c : repo.getCities()) if (c.id == hotel.cityId) { city = c; break; }
 
         findViewById(R.id.ivHero).setBackgroundResource(PLACEHOLDERS[(meta.imageVariant - 1) % PLACEHOLDERS.length]);
 

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class CityCardAdapter extends RecyclerView.Adapter<CityCardAdapter.VH> {
 
@@ -28,12 +29,14 @@ public class CityCardAdapter extends RecyclerView.Adapter<CityCardAdapter.VH> {
     private final Context context;
     private final TravelRepository repo;
     private List<City> cities;
+    private final Set<String> favoriteKeys;
     private final Listener listener;
 
-    public CityCardAdapter(Context context, TravelRepository repo, List<City> cities, Listener listener) {
+    public CityCardAdapter(Context context, TravelRepository repo, List<City> cities, Set<String> favoriteKeys, Listener listener) {
         this.context = context;
         this.repo = repo;
         this.cities = (cities != null) ? cities : new ArrayList<>();
+        this.favoriteKeys = favoriteKeys;
         this.listener = listener;
     }
 
@@ -47,23 +50,31 @@ public class CityCardAdapter extends RecyclerView.Adapter<CityCardAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         City city = cities.get(position);
-        int userId = SessionManager.getUserId(context);
+        String userId = SessionManager.getUserId(context);
+        String favKey = "city:" + city.id;
 
         holder.tvName.setText(city.name);
         holder.image.setBackgroundResource(PLACEHOLDERS[Math.abs(city.id) % PLACEHOLDERS.length]);
 
-        boolean fav = repo.isFavorite(userId, city.id, "city");
-        holder.btnFav.setImageResource(fav ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
+        holder.btnFav.setImageResource(favoriteKeys.contains(favKey) ? R.drawable.ic_heart_filled : R.drawable.ic_heart_outline);
 
         holder.btnFav.setOnClickListener(v -> {
-            if (repo.isFavorite(userId, city.id, "city")) {
-                repo.removeFavorite(userId, "city", city.id);
-                holder.btnFav.setImageResource(R.drawable.ic_heart_outline);
-                Toast.makeText(context, "Removed " + city.name + " from favorites", Toast.LENGTH_SHORT).show();
+            if (favoriteKeys.contains(favKey)) {
+                repo.removeFavorite(userId, "city", city.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.remove(favKey);
+                        holder.btnFav.setImageResource(R.drawable.ic_heart_outline);
+                        Toast.makeText(context, "Removed " + city.name + " from favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
-                repo.addFavorite(userId, "city", city.id);
-                holder.btnFav.setImageResource(R.drawable.ic_heart_filled);
-                Toast.makeText(context, "Added " + city.name + " to favorites", Toast.LENGTH_SHORT).show();
+                repo.addFavorite(userId, "city", city.id, new Callback<Void>() {
+                    @Override public void onSuccess(Void value) {
+                        favoriteKeys.add(favKey);
+                        holder.btnFav.setImageResource(R.drawable.ic_heart_filled);
+                        Toast.makeText(context, "Added " + city.name + " to favorites", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 

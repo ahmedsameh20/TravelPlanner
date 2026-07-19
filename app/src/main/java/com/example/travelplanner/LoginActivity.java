@@ -1,7 +1,6 @@
 package com.example.travelplanner;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,17 +34,19 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(this, "Fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-        Cursor c = Repo.auth().login(this, email, pass);
-        if (c != null) {
-            int id = c.getInt(0);
-            String name = c.getString(1);
-            c.close();
-            SessionManager.saveUser(this, id, name);
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-        } else {
-            Toast.makeText(this, "Invalid login", Toast.LENGTH_SHORT).show();
-        }
+        Repo.auth().login(this, email, pass, new AuthRepository.AuthCallback() {
+            @Override
+            public void onSuccess(String userId, String name) {
+                SessionManager.saveUser(LoginActivity.this, userId, name);
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                finish();
+            }
+
+            @Override
+            public void onError(String message) {
+                Toast.makeText(LoginActivity.this, "Invalid login", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private static String safeText(EditText e){ return e==null? "": String.valueOf(e.getText()).trim(); }

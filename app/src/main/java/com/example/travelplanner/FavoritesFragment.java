@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ public class FavoritesFragment extends Fragment {
     private TravelRepository repo;
     private RecyclerView rv;
     private TextView tvEmpty;
+    private ProgressBar progress;
     private FavoritesAdapter adapter;
 
     @Nullable
@@ -30,14 +32,20 @@ public class FavoritesFragment extends Fragment {
         repo = Repo.travel(requireContext());
         rv = v.findViewById(R.id.rvFavorites);
         tvEmpty = v.findViewById(R.id.tvEmpty);
+        progress = v.findViewById(R.id.progress);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new FavoritesAdapter(requireContext(), null, new FavoritesAdapter.Listener() {
             @Override
             public void onRemove(FavoriteItem item) {
-                repo.removeFavorite(SessionManager.getUserId(requireContext()), item.type, item.refId);
-                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT).show();
-                reload();
+                repo.removeFavorite(SessionManager.getUserId(requireContext()), item.type, item.refId, new Callback<Void>() {
+                    @Override
+                    public void onSuccess(Void value) {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT).show();
+                        reload();
+                    }
+                });
             }
 
             @Override
@@ -71,8 +79,22 @@ public class FavoritesFragment extends Fragment {
     }
 
     private void reload() {
-        List<FavoriteItem> favs = repo.getFavorites(SessionManager.getUserId(requireContext()));
-        adapter.updateData(favs);
-        tvEmpty.setVisibility(favs.isEmpty() ? View.VISIBLE : View.GONE);
+        progress.setVisibility(View.VISIBLE);
+        repo.getFavorites(SessionManager.getUserId(requireContext()), new Callback<List<FavoriteItem>>() {
+            @Override
+            public void onSuccess(List<FavoriteItem> favs) {
+                if (!isAdded()) return;
+                progress.setVisibility(View.GONE);
+                adapter.updateData(favs);
+                tvEmpty.setVisibility(favs.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (!isAdded()) return;
+                progress.setVisibility(View.GONE);
+                Toast.makeText(requireContext(), "Failed to load favorites: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
